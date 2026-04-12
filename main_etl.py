@@ -2,10 +2,11 @@ import argparse
 
 from config.db import get_connection, test_connection
 from repositories.firebird_repository import FirebirdRepository
-
 from etl.salud.desnutricion_etl import run_desnutricion_etl
 from etl.salud.retardo_desarrollo_etl import run_retardo_desarrollo_etl
 from etl.salud.salud_etl import run_salud_etl
+from etl.salud.cronicas_etl import run_cronicas_etl
+from etl.salud.maternal_etl import run_maternal_etl
 
 #enfermedades transmitidas por vectores
 VECTOR_MODULES = {
@@ -41,10 +42,17 @@ VECTOR_MODULES = {
     ),
 }
 
+#enfermedades cronicas
+CRONICAS_MODULES = {
+    "cronicas_2020": "Salud/Enfermedades_Cronicas_2020-2024/mec-2020-departamento-municipio.csv",
+    "cronicas_2021": "Salud/Enfermedades_Cronicas_2020-2024/mec-2021-departamento-municipio.csv",
+    "cronicas_2022": "Salud/Enfermedades_Cronicas_2020-2024/mec-2022-departamento-municipio.csv",
+    "cronicas_2023": "Salud/Enfermedades_Cronicas_2020-2024/mec-2023-departamento-municipio.csv",
+    "cronicas_2024": "Salud/Enfermedades_Cronicas_2020-2024/mec-2024-departamento-municipio.csv",
+}
 
 def run_catalogs(repo: FirebirdRepository):
     print("Cargando catálogos base")
-
 
 def run_module(module_name: str, repo: FirebirdRepository):
     print(f"Ejecutando módulo: {module_name}")
@@ -62,8 +70,30 @@ def run_module(module_name: str, repo: FirebirdRepository):
         run_salud_etl(repo, file_path, enfermedad, tipo_indicador)
         return
 
-    print("Módulo no reconocido")
+    if module_name in CRONICAS_MODULES:
+        run_cronicas_etl(
+            repo,
+            CRONICAS_MODULES[module_name],
+            f"Enfermedades crónicas {module_name[-4:]}"
+        )
+        return
 
+    if module_name == "neonatal":
+        run_cronicas_etl(
+            repo,
+            "Salud/Morbilidad Grupo Materno Infantil/morbilidad-neonatal-2012-al-2024.csv",
+            "Morbilidad neonatal"
+        )
+        return
+
+    if module_name == "maternal":
+        run_maternal_etl(
+            repo,
+            "Salud/Morbilidad Grupo Materno Infantil/morbilidad-materna-2012-al-2024.csv"
+        )
+        return
+
+    print("Módulo no reconocido")
 
 def main():
     parser = argparse.ArgumentParser(description="ETL Proyecto BD1")

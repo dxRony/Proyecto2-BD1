@@ -192,7 +192,6 @@ C:.
 |   +---Desnutricion
 |   |       morbilidad-desnutricion-aguda-departamento-municipio-2012-a-2024.csv (ya)
 |   |       morbilidad-retardo-desarrollo-departamento-municipio-2012-2024.csv (ya)
-|   |
 |   +---Enfermedades transmitidas por vectores
 |   |       enfermedades-transmitidas-por-vectores-2012-al-2024-chagas.csv (ya)
 |   |       enfermedades-transmitidas-por-vectores-2012-al-2024-chikungunya.csv (ya)
@@ -200,30 +199,24 @@ C:.
 |   |       enfermedades-transmitidas-por-vectores-2012-al-2024-dengue.csv (ya)
 |   |       enfermedades-transmitidas-por-vectores-2012-al-2024-malaria.csv (ya)
 |   |       enfermedades-transmitidas-por-vectores-2012-al-2024-zika.csv (ya)
-|   |
 |   +---Enfermedades_Cronicas_2020-2024
-|   |       mec-2020-departamento-municipio.csv
-|   |       mec-2021-departamento-municipio.csv
-|   |       mec-2022-departamento-municipio.csv
-|   |       mec-2023-departamento-municipio.csv
-|   |       mec-2024-departamento-municipio.csv
-|   |
+|   |       mec-2020-departamento-municipio.csv (ya)
+|   |       mec-2021-departamento-municipio.csv (ya)
+|   |       mec-2022-departamento-municipio.csv (ya)
+|   |       mec-2023-departamento-municipio.csv (ya)
+|   |       mec-2024-departamento-municipio.csv (ya)
 |   \---Morbilidad Grupo Materno Infantil
 |           exp.txt
-|           morbilidad-materna-2012-al-2024.csv
-|           morbilidad-neonatal-2012-al-2024.csv
-|
+|           morbilidad-materna-2012-al-2024.csv (ya)
+|           morbilidad-neonatal-2012-al-2024.csv (ya)
 \---Violencia
     +---Faltas judiciales
     |   |   20240524231759eHmz6DmFKboNQ5Y3OlqNkbi9izmXULaP.xlsx
-    |   |
     |   \---Diccionario
     |           20240524231842pWf6BcBWj8taVS3Q3mRKxgDsvwPejgH8.xlsx
-    |
     +---Hechos-Delicitivos
     |   +---Agraviados
     |   |       20240528163342pWf6BcBWj8taVS3Q3mRKxgDsvwPejgH8.xlsx
-    |   |
     |   +---Diccionarios
     |   |       20240528164137Qdung3Ix6ZUh8TejqRC7gLeXcHuhwxAl.xlsx
     |   |       20240528164332NudErojEnmloPqTMhSRutgPsnoFkJOt2.xlsx
@@ -233,51 +226,36 @@ C:.
     |   |       20240528164600h2NuX0RKNUd61gZu7ox4PQXgDUDgLC9Y.xlsx
     |   |       20240528164645mzIxoTsLKBOBI3sLQROJqn4f0HCNodaB.xlsx
     |   |       20240528164720xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx
-    |   |
     |   +---Evaluacion Medicos - INACIF
     |   |       20240528162820xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx
-    |   |
     |   +---Exhumaciones
     |   |       20240528163020xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx
-    |   |
     |   +---Necropsias
     |   |       20240528163210puPW7O9wJalS7I9yToxkpQLgLwNElAny.xlsx
-    |   |
     |   +---Organismo judical - Sentenciados
     |   |       20240528163614FaXwFKh8NYNiFivgBo98JEbaVMRUhaFG.xlsx
-    |   |
     |   +---PNC - Detenciados
     |   |       20240528163735e7G5K5EZOlGPCBiH4ROtQRgfm5sTifW1.xlsx
-    |   |
     |   +---PNC -Victimas
     |   |       20240528163848NcFYbAN6bA92ZKRG7mLINYvyZoVmXEDA.xlsx
-    |   |
     |   \---Sindicatos
     |           20240528163458VEdqlo5oBmhO5cvKTQhYRYj2D05gxCla.xlsx
-    |
-    +---Violencia contra la mujer
+        +---Violencia contra la mujer
     |   +---Atencion brindada
     |   |       Atenciones brindades por el Instituto de la Víctima 2020-2023(1).xlsx
-    |   |
     |   +---Delictos contra la vida y feminicidios
     |   |       Delitos contra la vida de las mujeres y femicidios del MP.xlsx
-    |   |
     |   +---Denuncias registradas
     |   |       Denuncias del MP por el delito de VCM.xlsx
-    |   |
     |   +---Evaluaciones Inacif
     |   |       Evaluciones realizadas por el INACIF 2008 al 2024.xlsx
-    |   |
     |   +---Hechos delicttivos
     |   |       Hechos delictivos contra mujeres de 2008 al 2024.xlsx
-    |   |
     |   +---Medidas de seguridad
     |   |       Medidas de Seguridad 2012-2024.xlsx
-    |   |
     |   \---Sentencias por delito
     |           Sentencias del MP por el delito de VCM.xlsx
     |           SENTENCIAS DEL OJ POR EL DELITO DE VCM 2008-2024.xlsx
-    |
     +---Violencia contra la ninez
     |   +---conjunto_de_datos_sdem_enti_2022
     |   |   +---catalogos
@@ -285,29 +263,21 @@ C:.
     |   |   |       ambito2.csv
     |   |   +---conjunto_de_datos
     |   |   |       conjunto_de_datos_sdem_enti_2022.csv
-    |   |   |
     |   |   +---diccionario_de_datos
     |   |   |       diccionario_datos_sdem_enti_2022.csv
-    |   |   |
     |   |   +---metadatos
     |   |   |       metadatos_enti_2022.txt
-    |   |   |
     |   |   \---modelo_entidad_relacion
     |   |           modelo_er_enti_2022.jpg
-    |   |
     |   \---Quejas Mineduc
     |           20240719123138C8M6SpIQkU1dO569us4WzmhiEojxPhwf.xlsx (a medias)
-    |
     +---Violencia estructural
     |       CASOS DISCRIMINACIÓN 2016-2023.xls
-    |
     \---Violencia intrafamiliar
         +---2023
         |   |   2024052300200h2NuX0RKNUd61gZu7ox4PQXgDUDgLC9Y.xlsx
-        |   |
         |   \---Diccionario
         |           2024052300613QDinUvuRa9GjopyXaTuNMXc3gd6Jq1Q1.xlsx
-        |
         \---2024
                 base-de-datos-violencia-intrafamiliar-ano-2024_v3.xlsx
                 diccionario-de-variables-violencia-intrafamiliar.xlsx

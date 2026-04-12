@@ -5,3 +5,4 @@ config/__pycache__/
 repositories/__pycache__/
 utils/__pycache__/
 profiling/__pycache__/
+etl/salud/__pycache__/
