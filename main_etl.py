@@ -7,6 +7,8 @@ from etl.salud.retardo_desarrollo_etl import run_retardo_desarrollo_etl
 from etl.salud.salud_etl import run_salud_etl
 from etl.salud.cronicas_etl import run_cronicas_etl
 from etl.salud.maternal_etl import run_maternal_etl
+from etl.violencia.quejas_mineduc_etl import run_quejas_mineduc_etl
+from etl.violencia.discriminacion_etl import run_discriminacion_etl
 
 #enfermedades transmitidas por vectores
 VECTOR_MODULES = {
@@ -91,6 +93,14 @@ def run_module(module_name: str, repo: FirebirdRepository):
             repo,
             "Salud/Morbilidad Grupo Materno Infantil/morbilidad-materna-2012-al-2024.csv"
         )
+        return
+
+    if module_name == "quejas_mineduc":
+        run_quejas_mineduc_etl(repo)
+        return
+
+    if module_name == "discriminacion":
+        run_discriminacion_etl(repo)
         return
 
     print("Módulo no reconocido")
