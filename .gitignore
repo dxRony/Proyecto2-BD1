@@ -2,5 +2,6 @@ Salud/
 Violencia/
 config/__pycache__/
 .venv/
-reposories/__pycache__/
+repositories/__pycache__/
 utils/__pycache__/
+profiling/__pycache__/
