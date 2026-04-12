@@ -1,19 +1,68 @@
 import argparse
+
 from config.db import get_connection, test_connection
 from repositories.firebird_repository import FirebirdRepository
 
+from etl.salud.desnutricion_etl import run_desnutricion_etl
+from etl.salud.retardo_desarrollo_etl import run_retardo_desarrollo_etl
+from etl.salud.salud_etl import run_salud_etl
 
-def run_catalogs(repo):
-    print("Cargando catalogos base")
+#enfermedades transmitidas por vectores
+VECTOR_MODULES = {
+    "dengue": (
+        "Salud/Enfermedades transmitidas por vectores/enfermedades-transmitidas-por-vectores-2012-al-2024-dengue.csv",
+        "Dengue",
+        "Enfermedades transmitidas por vectores"
+    ),
+    "dengue_grave": (
+        "Salud/Enfermedades transmitidas por vectores/enfermedades-transmitidas-por-vectores-2012-al-2024-dengue-grave.csv",
+        "Dengue grave",
+        "Enfermedades transmitidas por vectores"
+    ),
+    "malaria": (
+        "Salud/Enfermedades transmitidas por vectores/enfermedades-transmitidas-por-vectores-2012-al-2024-malaria.csv",
+        "Malaria",
+        "Enfermedades transmitidas por vectores"
+    ),
+    "chagas": (
+        "Salud/Enfermedades transmitidas por vectores/enfermedades-transmitidas-por-vectores-2012-al-2024-chagas.csv",
+        "Chagas",
+        "Enfermedades transmitidas por vectores"
+    ),
+    "zika": (
+        "Salud/Enfermedades transmitidas por vectores/enfermedades-transmitidas-por-vectores-2012-al-2024-zika.csv",
+        "Zika",
+        "Enfermedades transmitidas por vectores"
+    ),
+    "chikungunya": (
+        "Salud/Enfermedades transmitidas por vectores/enfermedades-transmitidas-por-vectores-2012-al-2024-chikungunya.csv",
+        "Chikungunya",
+        "Enfermedades transmitidas por vectores"
+    ),
+}
 
 
-def run_module(module_name, repo):
+def run_catalogs(repo: FirebirdRepository):
+    print("Cargando catálogos base")
+
+
+def run_module(module_name: str, repo: FirebirdRepository):
     print(f"Ejecutando módulo: {module_name}")
 
-    if module_name == "quejas_mineduc":
-        print("aun no implementado")
-    else:
-        print("modulo no reconocido")
+    if module_name == "desnutricion":
+        run_desnutricion_etl(repo)
+        return
+
+    if module_name == "retardo_desarrollo":
+        run_retardo_desarrollo_etl(repo)
+        return
+
+    if module_name in VECTOR_MODULES:
+        file_path, enfermedad, tipo_indicador = VECTOR_MODULES[module_name]
+        run_salud_etl(repo, file_path, enfermedad, tipo_indicador)
+        return
+
+    print("Módulo no reconocido")
 
 
 def main():

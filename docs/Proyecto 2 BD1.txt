@@ -1,0 +1,313 @@
+Proyecto 2
+Indicadores Sociales y Sanitarios de Guatemala
+- Descripción
+Guatemala enfrenta una compleja realidad nacional donde la violencia y la salud pública se entrelazan como dos de las problemáticas 
+más críticas que afectan a su población. La violencia, en sus múltiples manifestaciones: delictiva, intrafamiliar, estructural, 
+contra la mujer y la niñez; encuentra sus raíces en factores socioeconómicos, educativos y culturales que también condicionan el 
+estado de salud de las comunidades. Por su parte, los indicadores sanitarios como la desnutrición, las enfermedades crónicas, las 
+enfermedades transmitidas por vectores y la morbilidad materna infantil reflejan las profundas desigualdades territoriales y 
+sociales del país.
+
+Ante esta realidad, se solicita realizar un mapeo de base de datos sobre este sistema integral, que permita relacionar indicadores 
+de violencia con indicadores de salud pública a nivel departamental y municipal. Para ello, se deberá llevar a cabo un análisis de 
+previo a diagramar, mapear las tablas de la base de datos, que permita analizar y entender de mejor manera el sistema, puede guiarse 
+del ejemplo dado en la clase 4, con esto me refiero al archivo txt donde se realiza el análisis previo a escribir el código de la 
+base de datos; posteriormente se realizará el modelado lógico, conceptual y físico de la base de datos tomar en cuenta que debe 
+realizarse en línea, utilizando los datos reales provistos. Con base en estos datos se implementarán consultas complejas, 
+acompañadas cada una de su descripción en álgebra relacional. La base de datos deberá estar completamente normalizada 3FN.
+
+- Objetivos
++ Objetivo general
+Diseñar e implementar una base de datos completamente normalizada que integre indicadores de violencia e indicadores de salud 
+pública de Guatemala, permitiendo consultas analíticas que revelen relaciones entre ambas dimensiones de la realidad nacional.
+
++ Objetivos específicos
+Usar la información de los archivos proporcionados de fuentes oficiales guatemaltecas sobre violencia y salud pública.
+Modelar un sistema de base de datos que integre múltiples subsistemas temáticos relacionados entre sí.
+Utilizar el RDBMS asignado de forma eficiente para la gestión y consulta de los datos. (Firebird)
+Implementar consultas complejas que permitan análisis cruzados entre los distintos subsistemas.
+Aplicar conocimientos de álgebra relacional en la descripción formal de cada consulta.
+
+- Detalles
+El sistema abarca dos grandes ejes temáticos: violencia e indicadores de salud, cada uno compuesto por varios subsistemas de interés.
++ Eje 1 — Violencia
+	* Violencia general
+	En este apartado usted tendrá a disposición la carpeta “Hechos-delictivos”, allí encontrará una serie de archivos de Excel, los 
+	cuales tratan registros de violencia, como asaltos, homicidios, entre otros y el proceso que realizan algunas entidades 
+	gubernamentales sobre estos, como exhumaciones, necropsias, entre otros elementos.
+
+		- Violencia contra la mujer
+		En la carpeta sobre violencia contra la mujer, usted encontrará información sobre denuncias, atenciones, hechos delictivos, 
+		entre otros registros de interés.
+
+		- Sentencias completas
+		En el excel se cuenta con información de sentencias, no obstante esta se deberá de complementar más para su solución, con 
+		esto quiero decir que visite el siguiente link, en el cual podrá encontrar un registro de cada sentencia, con información 
+		detallada de la persona sentenciada.
+		observatorio.mp.gob.gt/sentencias/
+		
+		Para este caso, el hecho que se tenga información más detallada de una sentencia, puede o no existir, es decir en base a las 
+		sentencias generales, su mapeo deberá permitir este ingreso.
+
+	* Violencia infantil
+		- Trabajo infantil
+		Este es uno de los factores más importantes en cuanto a violencia que llegan a sufrir nuestra población, por ello es 
+		importante poder determinar un registro adecuado, por ello se le solicita pueda guiarse en base a esta información y poder 
+		estructurar entidades que reflejan este tema en su mapeo. Puede guiarse en el archivo de XML/JSON que se utiliza en México, 
+		ya que la información debería ser similar a nuestra realidad.
+		
+		https://www.ine.gob.gt/sistema/uploads/2014/01/13/M2mwsNGpouJ8sjK4nuDqiu8qMFLkgBXX.pdf
+		https://www.inegi.org.mx/rnm/index.php/catalog/919/study-description
+
+	* Embarazos
+	Para ello se le solicita pueda ingresar al siguiente link, donde encontrará la información sobre embarazos en el país, esto dado 
+	por ubicación geográfica y edad, es ideal conocer estos registros, por años.
+	https://osarguatemala.org/embarazo/datos/
+	
+	* Violencia intrafamiliar
+	En la carpeta de violencia intrafamiliar, usted encontrará la información, sobre elementos de interés sobre este tópico.
+
+	* Violencia estructural
+	La violencia estructural es un tipo de violencia que se centra en circunstancias sociales, como etnia, género, color de piel, 
+	entre otras características que puedan asociar a la persona a un grupo.
+	Para ello es de interes que usted proponga entidades donde se registren las denuncias realizadas por discriminacion e 
+	informacion de interes como, poblacion a la cual pertenece la persona, nivel de escolaridad, sexo, entre otros factores, ademas 
+	de tener en cuenta si se proceso o no esa denuncia.
+
+	* Faltas judiciales
+	En faltas judiciales, usted podrá encontrar el registro de este tópico, como aclaración una falta judicial es una falta leve, a 
+	comparación con otros gravámenes.
+
++ Eje 2 — Salud Pública
+	* Desnutrición: Se cuenta con datos de desnutrición aguda y retardo en el desarrollo, desagregados por departamento, municipio, 
+	grupo etario, sexo y año 2012–2024.
+
+	* Enfermedades crónicas: Se dispone de registros de enfermedades crónicas por diagnóstico CIE-10, desagregados por departamento, 
+	municipio, grupo etario, sexo y año 2020–2024.
+
+	* Enfermedades transmitidas por vectores: Se cuenta con registros de dengue, dengue grave, malaria, Chagas, Zika y Chikungunya, 
+	desagregados por departamento, municipio, grupo etario, sexo y año 2012–2024.
+
+	* Morbilidad materna infantil: Se dispone de registros de morbilidad del grupo materno infantil, entendida como las 
+	complicaciones durante el embarazo, parto y puerperio que ponen en riesgo la vida de la mujer.
+
+- Factores a consideración
+Como factores de interés transversales a ambos ejes, se deberá contemplar el registro de tener en cuenta registros de denuncias o 
+encuestas, nivel de escolaridad, nivel socioeconómico, idioma, cantidad de personas en el hogar, condición laboral y tipo de empleo 
+de las personas involucradas en los distintos registros. Estos factores permitirán enriquecer los análisis relacionales entre 
+violencia y salud.
+
+Todos estos sistemas detallados anteriormente, servirán para estructurar un sistema de violencia/salud en nuestro país, recuerde que 
+mucha de esta información vendrá en los archivos, sin embargo, para la relación de registros transaccionales, será necesario que 
+usted invente una serie de registros, esto para hacer realista la propuesta, pese a que no se tengan los datos que relacionen 
+directamente cada uno de estos sistemas. Puede usar la Herramienta de Faker para la generación de datos sobre las personas, tratando 
+la manera de que el sistema sea lo más realista posible.
+
+Además cada una de las carpetas tiene una llamada “DICCIONARIO” o parecido, allí está detallado la nomenclatura de variables que 
+utilizan para que usted lo pueda adaptar a lo que necesite.
+
+- Consultas propuestas:
+Cantidad de homicidios registrados por año y departamento.
+Número de denuncias por violencia contra la mujer por municipio.
+Top 5 tipos de hechos delictivos más frecuentes en los últimos 5 años.
+Sentencias dictadas por tipo de delito y año.
+Promedio de edad de las víctimas de violencia intrafamiliar.
+Distribución de embarazos adolescentes (menores de 19 años) por región.
+Cantidad de casos de violencia infantil relacionados con trabajo infantil.
+Porcentaje de denuncias por discriminación según etnia.
+Comparativa entre nivel de escolaridad y tipo de falta judicial cometida.
+Número de necropsias realizadas por año.
+Tasa de denuncias de violencia estructural procesadas vs. no procesadas.
+Relación entre el tipo de empleo y la ocurrencia de hechos delictivos.
+Casos de violencia contra la mujer con sentencia firme.
+Idiomas hablados por víctimas de discriminación.
+Número de personas por hogar en casos con denuncias de violencia intrafamiliar.
+Tasa de denuncias de violencia infantil en población escolarizada vs. no escolarizada.
+Casos de trabajo infantil por sector económico (agricultura, industria, etc.).
+Relación entre edad y tipo de violencia sufrida (infantil, intrafamiliar, estructural, etc.).
+Casos de desnutrición aguda por departamento, municipio y año.
+Comparativa de casos de retardo en el desarrollo entre grupos etarios y sexo por región.
+Departamentos con mayor incidencia de enfermedades crónicas según diagnóstico CIE-10.
+Evolución anual de casos de dengue y dengue grave por departamento del 2012 al 2024.
+Distribución de casos de malaria por grupo etario y sexo a nivel municipal.
+Relación entre casos de desnutrición aguda infantil y registros de violencia intrafamiliar por departamento.
+Top 5 municipios con mayor cantidad de casos de Chagas, Zika y Chikungunya combinados.
+Comparativa entre enfermedades transmitidas por vectores y nivel de urbanización por departamento.
+Tasa de morbilidad materna infantil por año y departamento.
+Correlación entre casos de desnutrición y ocurrencia de hechos delictivos por municipio.
+Comparativa de violencia estructural entre áreas urbanas y rurales.
+Frecuencia de exhumaciones por tipo de delito relacionado.
+
+- Criterios de evaluación
+Tiempo de inversión (investigación y creación de la base de datos)
+Transformación de los datos
+Generación de consultas complejas
+Calidad de los datos (debe de utilizar datasets con datos reales)
+Análisis previo a escribir y diagramar el código(Archivo txt) 
+Análisis completo del estudiante sobre su sistema propuesto
+
+- Importante
+Para la generación de los datos inserts de su base de datos puede usar herramientas como colab, python, selenium. En el caso de 
+obtención de los casos de embarazos en madres menores de edad o embarazos infantiles puede usar web scraping ya que la página web no 
+cuenta con archivos que puedan ser descargados.
+
+- Carpeta con los datos:
+https://drive.google.com/drive/folders/1BimCEyQX_NjfMvfG8UIFouq5buj12Zc9?usp=sharing
+
+- Referencias de librerias recomendadas
+https://pandas.pydata.org/
+https://selenium-python.readthedocs.io/
+https://pypi.org/project/beautifulsoup4/
+https://pypi.org/project/Faker/
+
+- Entrega 1: 06 de abril a las 12:00 PM
+	Documentación(Modelo lógico, modelo conceptual, 
+	análisis previo(txt))
+- Entrega 2: 14 de abril a las 12:00 PM
+	Modelo físico, análisis completo de la propuesta, 
+	justificaciones, archivos inserts, documentación 
+	completa.
+
+1. Eje 1 - violencia
+1.1 Violencia general							: carpeta "Hechos delictivos"
+1.1.1 Violencia contra la mujeres				: carpeta "Violencia contra la mujer"
+1.1.2 Sentencias completas						: 3 archivos + url: observatorio.mp.gob.gt/sentencias/
+1.2 Violencia infantil 							
+1.2.1 Trabajo infantil 							: xml/json de: https://www.inegi.org.mx/rnm/index.php/catalog/919/study-description
+												y enlace a PDF:https://www.ine.gob.gt/sistema/uploads/2014/01/13/M2mwsNGpouJ8sjK4nuDqiu8qMFLkgBXX.pdf 
+1.3 Embarazos									: url: https://osarguatemala.org/embarazo/datos/
+1.4 Violencia intrafamiliar 					: carpeta "violencia intrafamiliar"
+1.5 Violencia estructural						: carpeta "violencia estructural"
+1.6 Faltas judiciales 							: carpeta "faltas judiciales"
+2. Eje 2 - Salud publica
+2.1 Desnutricion 								: carpeta "desnutricion"
+2.2 Enfermedades cronicas						: caropeta: "enfermedades cronicas"
+2.3 Enfermedades transmitidas por vectores 		: carpeta: "enfermedades transmitidas por vectores"
+2.4 Morbilidad materna infantil 				: carpeta: "morbilidad grupo materno infantil" 
+
+C:.
+|   Proyecto2_BD1_2026.docx
+|
++---Salud
+|   +---Desnutricion
+|   |       morbilidad-desnutricion-aguda-departamento-municipio-2012-a-2024.csv (ya)
+|   |       morbilidad-retardo-desarrollo-departamento-municipio-2012-2024.csv (ya)
+|   |
+|   +---Enfermedades transmitidas por vectores
+|   |       enfermedades-transmitidas-por-vectores-2012-al-2024-chagas.csv (ya)
+|   |       enfermedades-transmitidas-por-vectores-2012-al-2024-chikungunya.csv (ya)
+|   |       enfermedades-transmitidas-por-vectores-2012-al-2024-dengue-grave.csv (ya)
+|   |       enfermedades-transmitidas-por-vectores-2012-al-2024-dengue.csv (ya)
+|   |       enfermedades-transmitidas-por-vectores-2012-al-2024-malaria.csv (ya)
+|   |       enfermedades-transmitidas-por-vectores-2012-al-2024-zika.csv (ya)
+|   |
+|   +---Enfermedades_Cronicas_2020-2024
+|   |       mec-2020-departamento-municipio.csv
+|   |       mec-2021-departamento-municipio.csv
+|   |       mec-2022-departamento-municipio.csv
+|   |       mec-2023-departamento-municipio.csv
+|   |       mec-2024-departamento-municipio.csv
+|   |
+|   \---Morbilidad Grupo Materno Infantil
+|           exp.txt
+|           morbilidad-materna-2012-al-2024.csv
+|           morbilidad-neonatal-2012-al-2024.csv
+|
+\---Violencia
+    +---Faltas judiciales
+    |   |   20240524231759eHmz6DmFKboNQ5Y3OlqNkbi9izmXULaP.xlsx
+    |   |
+    |   \---Diccionario
+    |           20240524231842pWf6BcBWj8taVS3Q3mRKxgDsvwPejgH8.xlsx
+    |
+    +---Hechos-Delicitivos
+    |   +---Agraviados
+    |   |       20240528163342pWf6BcBWj8taVS3Q3mRKxgDsvwPejgH8.xlsx
+    |   |
+    |   +---Diccionarios
+    |   |       20240528164137Qdung3Ix6ZUh8TejqRC7gLeXcHuhwxAl.xlsx
+    |   |       20240528164332NudErojEnmloPqTMhSRutgPsnoFkJOt2.xlsx
+    |   |       202405281644096rGNQ5SfAlepmPGfYTovW9MF6X2turyT.xlsx
+    |   |       2024052816445767yh4FO7s1alkNyrsl89UhkrYrkzGtwv.xlsx
+    |   |       20240528164527eLWpCfULaJgv2r4fEn6RGLqXy5knWzmf.xlsx
+    |   |       20240528164600h2NuX0RKNUd61gZu7ox4PQXgDUDgLC9Y.xlsx
+    |   |       20240528164645mzIxoTsLKBOBI3sLQROJqn4f0HCNodaB.xlsx
+    |   |       20240528164720xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx
+    |   |
+    |   +---Evaluacion Medicos - INACIF
+    |   |       20240528162820xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx
+    |   |
+    |   +---Exhumaciones
+    |   |       20240528163020xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx
+    |   |
+    |   +---Necropsias
+    |   |       20240528163210puPW7O9wJalS7I9yToxkpQLgLwNElAny.xlsx
+    |   |
+    |   +---Organismo judical - Sentenciados
+    |   |       20240528163614FaXwFKh8NYNiFivgBo98JEbaVMRUhaFG.xlsx
+    |   |
+    |   +---PNC - Detenciados
+    |   |       20240528163735e7G5K5EZOlGPCBiH4ROtQRgfm5sTifW1.xlsx
+    |   |
+    |   +---PNC -Victimas
+    |   |       20240528163848NcFYbAN6bA92ZKRG7mLINYvyZoVmXEDA.xlsx
+    |   |
+    |   \---Sindicatos
+    |           20240528163458VEdqlo5oBmhO5cvKTQhYRYj2D05gxCla.xlsx
+    |
+    +---Violencia contra la mujer
+    |   +---Atencion brindada
+    |   |       Atenciones brindades por el Instituto de la Víctima 2020-2023(1).xlsx
+    |   |
+    |   +---Delictos contra la vida y feminicidios
+    |   |       Delitos contra la vida de las mujeres y femicidios del MP.xlsx
+    |   |
+    |   +---Denuncias registradas
+    |   |       Denuncias del MP por el delito de VCM.xlsx
+    |   |
+    |   +---Evaluaciones Inacif
+    |   |       Evaluciones realizadas por el INACIF 2008 al 2024.xlsx
+    |   |
+    |   +---Hechos delicttivos
+    |   |       Hechos delictivos contra mujeres de 2008 al 2024.xlsx
+    |   |
+    |   +---Medidas de seguridad
+    |   |       Medidas de Seguridad 2012-2024.xlsx
+    |   |
+    |   \---Sentencias por delito
+    |           Sentencias del MP por el delito de VCM.xlsx
+    |           SENTENCIAS DEL OJ POR EL DELITO DE VCM 2008-2024.xlsx
+    |
+    +---Violencia contra la ninez
+    |   +---conjunto_de_datos_sdem_enti_2022
+    |   |   +---catalogos
+    |   |   |       ambito1.csv
+    |   |   |       ambito2.csv
+    |   |   +---conjunto_de_datos
+    |   |   |       conjunto_de_datos_sdem_enti_2022.csv
+    |   |   |
+    |   |   +---diccionario_de_datos
+    |   |   |       diccionario_datos_sdem_enti_2022.csv
+    |   |   |
+    |   |   +---metadatos
+    |   |   |       metadatos_enti_2022.txt
+    |   |   |
+    |   |   \---modelo_entidad_relacion
+    |   |           modelo_er_enti_2022.jpg
+    |   |
+    |   \---Quejas Mineduc
+    |           20240719123138C8M6SpIQkU1dO569us4WzmhiEojxPhwf.xlsx (a medias)
+    |
+    +---Violencia estructural
+    |       CASOS DISCRIMINACIÓN 2016-2023.xls
+    |
+    \---Violencia intrafamiliar
+        +---2023
+        |   |   2024052300200h2NuX0RKNUd61gZu7ox4PQXgDUDgLC9Y.xlsx
+        |   |
+        |   \---Diccionario
+        |           2024052300613QDinUvuRa9GjopyXaTuNMXc3gd6Jq1Q1.xlsx
+        |
+        \---2024
+                base-de-datos-violencia-intrafamiliar-ano-2024_v3.xlsx
+                diccionario-de-variables-violencia-intrafamiliar.xlsx
