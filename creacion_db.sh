@@ -21,11 +21,10 @@ if [ ! -f "$SQL_SOURCE" ]; then
 fi
 
 #crear dirs si no exosten
-sudo mkdir -p /var/lib/firebird/data
 sudo mkdir -p /tmp/firebird
-sudo chown -R firebird:firebird /var/lib/firebird
 sudo chown firebird:firebird /tmp/firebird
-sudo chmod 750 /tmp/firebird
+sudo chmod 2775 /tmp/firebird
+sudo restorecon -Rv /tmp/firebird
 
 
 #eliminar db si existe

@@ -1,0 +1,7 @@
+pandas
+openpyxl
+firebird-driver
+python-dotenv
+selenium
+beautifulsoup4
+Faker
