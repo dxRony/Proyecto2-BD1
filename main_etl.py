@@ -9,6 +9,7 @@ from etl.salud.cronicas_etl import run_cronicas_etl
 from etl.salud.maternal_etl import run_maternal_etl
 from etl.violencia.quejas_mineduc_etl import run_quejas_mineduc_etl
 from etl.violencia.discriminacion_etl import run_discriminacion_etl
+from etl.violencia.violencia_intrafamiliar_etl import run_violencia_intrafamiliar_etl
 
 #enfermedades transmitidas por vectores
 VECTOR_MODULES = {
@@ -51,6 +52,19 @@ CRONICAS_MODULES = {
     "cronicas_2022": "Salud/Enfermedades_Cronicas_2020-2024/mec-2022-departamento-municipio.csv",
     "cronicas_2023": "Salud/Enfermedades_Cronicas_2020-2024/mec-2023-departamento-municipio.csv",
     "cronicas_2024": "Salud/Enfermedades_Cronicas_2020-2024/mec-2024-departamento-municipio.csv",
+}
+
+VIOLENCIA_INTRAFAMILIAR_MODULES = {
+    "violencia_intrafamiliar_2023": (
+        "Violencia/Violencia intrafamiliar/2023/2024052300200h2NuX0RKNUd61gZu7ox4PQXgDUDgLC9Y.xlsx",
+        "Violencia/Violencia intrafamiliar/2023/Diccionario/2024052300613QDinUvuRa9GjopyXaTuNMXc3gd6Jq1Q1.xlsx",
+        "Violencia intrafamiliar 2023"
+    ),
+    "violencia_intrafamiliar_2024": (
+        "Violencia/Violencia intrafamiliar/2024/base-de-datos-violencia-intrafamiliar-ano-2024_v3.xlsx",
+        "Violencia/Violencia intrafamiliar/2024/diccionario-de-variables-violencia-intrafamiliar.xlsx",
+        "Violencia intrafamiliar 2024"
+    ),
 }
 
 def run_catalogs(repo: FirebirdRepository):
@@ -101,6 +115,11 @@ def run_module(module_name: str, repo: FirebirdRepository):
 
     if module_name == "discriminacion":
         run_discriminacion_etl(repo)
+        return
+
+    if module_name in VIOLENCIA_INTRAFAMILIAR_MODULES:
+        file_path, dict_path, dataset_name = VIOLENCIA_INTRAFAMILIAR_MODULES[module_name]
+        run_violencia_intrafamiliar_etl(repo, file_path, dict_path, dataset_name)
         return
 
     print("Módulo no reconocido")

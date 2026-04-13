@@ -240,7 +240,7 @@ C:.
     |   |       20240528163848NcFYbAN6bA92ZKRG7mLINYvyZoVmXEDA.xlsx
     |   \---Sindicatos
     |           20240528163458VEdqlo5oBmhO5cvKTQhYRYj2D05gxCla.xlsx
-        +---Violencia contra la mujer
+    |   +---Violencia contra la mujer
     |   +---Atencion brindada
     |   |       Atenciones brindades por el Instituto de la Víctima 2020-2023(1).xlsx
     |   +---Delictos contra la vida y feminicidios
@@ -316,7 +316,7 @@ C:.
     |   |       20240528163848NcFYbAN6bA92ZKRG7mLINYvyZoVmXEDA.xlsx
     |   \---Sindicatos
     |           20240528163458VEdqlo5oBmhO5cvKTQhYRYj2D05gxCla.xlsx
-        +---Violencia contra la mujer
+    |   +---Violencia contra la mujer
     |   +---Atencion brindada
     |   |       Atenciones brindades por el Instituto de la Víctima 2020-2023(1).xlsx
     |   +---Delictos contra la vida y feminicidios
@@ -351,9 +351,9 @@ C:.
     |       CASOS DISCRIMINACIÓN 2016-2023.xls (ya)
     \---Violencia intrafamiliar
         +---2023
-        |   |   2024052300200h2NuX0RKNUd61gZu7ox4PQXgDUDgLC9Y.xlsx
+        |   |   2024052300200h2NuX0RKNUd61gZu7ox4PQXgDUDgLC9Y.xlsx (ya)
         |   \---Diccionario
-        |           2024052300613QDinUvuRa9GjopyXaTuNMXc3gd6Jq1Q1.xlsx
+        |           2024052300613QDinUvuRa9GjopyXaTuNMXc3gd6Jq1Q1.xlsx (ya)
         \---2024
-                base-de-datos-violencia-intrafamiliar-ano-2024_v3.xlsx
-                diccionario-de-variables-violencia-intrafamiliar.xlsx
+                base-de-datos-violencia-intrafamiliar-ano-2024_v3.xlsx (ya)
+                diccionario-de-variables-violencia-intrafamiliar.xlsx (ya)
