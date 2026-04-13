@@ -14,6 +14,12 @@ from etl.violencia.faltas_judiciales_etl import run_faltas_judiciales_etl
 from etl.violencia.pnc_victimas_etl import run_pnc_victimas_etl
 from etl.violencia.pnc_detenidos_etl import run_pnc_detenidos_etl
 from etl.violencia.oj_sentenciados_etl import run_oj_sentenciados_etl
+from etl.violencia.necropsias_etl import run_necropsias_etl
+from etl.violencia.exhumaciones_etl import run_exhumaciones_etl
+from etl.violencia.agraviados_etl import run_agraviados_etl
+from etl.violencia.sindicatos_etl import run_sindicatos_etl
+from etl.violencia.evaluacion_inacif_etl import run_inacif_etl
+
 
 #enfermedades transmitidas por vectores
 VECTOR_MODULES = {
@@ -99,6 +105,38 @@ OJ_SENTENCIADOS_MODULES = {
     ),
 }
 
+NECROPSIAS_MODULES = {
+    "necropsias": (
+        "Violencia/Hechos-Delicitivos/Necropsias/20240528163210puPW7O9wJalS7I9yToxkpQLgLwNElAny.xlsx",
+        "Necropsias"
+    ),
+}
+
+EXHUMACIONES_MODULES = {
+    "exhumaciones": (
+        "Violencia/Hechos-Delicitivos/Exhumaciones/20240528163020xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx",
+        "Exhumaciones"
+    ),
+}
+
+AGRAVIADOS_MODULES = {
+    "agraviados": (
+        "Violencia/Hechos-Delicitivos/Agraviados/20240528163342pWf6BcBWj8taVS3Q3mRKxgDsvwPejgH8.xlsx",
+        "Agraviados MP"
+    ),
+}
+
+SINDICATOS_MODULES = {
+    "sindicatos": (
+        "Violencia/Hechos-Delicitivos/Sindicatos/20240528163458VEdqlo5oBmhO5cvKTQhYRYj2D05gxCla.xlsx",
+        "Sindicatos MP"
+    ),
+}
+
+INACIF_MODULES = {
+    "inacif": "Violencia/Hechos-Delicitivos/Evaluacion Medicos - INACIF/20240528162820xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx"
+}
+
 def run_catalogs(repo: FirebirdRepository):
     print("Cargando catálogos base")
 
@@ -172,6 +210,30 @@ def run_module(module_name: str, repo: FirebirdRepository):
     if module_name in OJ_SENTENCIADOS_MODULES:
         file_path, dataset_name = OJ_SENTENCIADOS_MODULES[module_name]
         run_oj_sentenciados_etl(repo, file_path, dataset_name)
+        return
+
+    if module_name in NECROPSIAS_MODULES:
+        file_path, dataset_name = NECROPSIAS_MODULES[module_name]
+        run_necropsias_etl(repo, file_path, dataset_name)
+        return
+    
+    if module_name in EXHUMACIONES_MODULES:
+        file_path, dataset_name = EXHUMACIONES_MODULES[module_name]
+        run_exhumaciones_etl(repo, file_path, dataset_name)
+        return
+
+    if module_name in AGRAVIADOS_MODULES:
+        file_path, dataset_name = AGRAVIADOS_MODULES[module_name]
+        run_agraviados_etl(repo, file_path, dataset_name)
+        return
+
+    if module_name in SINDICATOS_MODULES:
+        file_path, dataset_name = SINDICATOS_MODULES[module_name]
+        run_sindicatos_etl(repo, file_path, dataset_name)
+        return
+    
+    if module_name in INACIF_MODULES:
+        run_inacif_etl(repo, INACIF_MODULES[module_name])
         return
 
     print("Modulo no reconocido")

@@ -6,7 +6,6 @@ import pandas as pd
 
 from repositories.firebird_repository import FirebirdRepository
 
-
 MESES_ES = {
     "enero": 1,
     "febrero": 2,
@@ -48,12 +47,10 @@ DIAS_ES = {
     6: "Domingo",
 }
 
-
 def normalize_text(value) -> str:
     if value is None or pd.isna(value):
         return ""
     return str(value).strip()
-
 
 def normalize_name(text) -> str:
     if text is None or pd.isna(text):
@@ -65,7 +62,6 @@ def normalize_name(text) -> str:
     text = text.replace("(o)", "")
     text = " ".join(text.split())
     return text
-
 
 def safe_int(value):
     if value is None or pd.isna(value):
@@ -135,7 +131,6 @@ def canonicalize_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
     df = df.rename(columns=rename_map)
     return df
 
-
 def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> int:
     repo.execute("""
         SELECT id
@@ -156,7 +151,6 @@ def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> in
     """, ("Organismo Judicial", dataset_name, "Excel"))
 
     return repo.fetch_one()[0]
-
 
 def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int = 1) -> int:
     fecha_str = f"{anio:04d}-{mes:02d}-{dia:02d}"
@@ -187,7 +181,6 @@ def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int 
 
     return repo.fetch_one()[0]
 
-
 def build_municipio_name_map(repo: FirebirdRepository) -> dict:
     repo.execute("""
         SELECT id, nombre
@@ -200,7 +193,6 @@ def build_municipio_name_map(repo: FirebirdRepository) -> dict:
         result[normalize_name(nombre)] = municipio_id
 
     return result
-
 
 def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     nombre_norm = normalize_name(nombre)
@@ -230,7 +222,6 @@ def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     """, (codigo, nombre_final))
 
     return repo.fetch_one()[0]
-
 
 def get_or_create_tipo_falta(repo: FirebirdRepository, nombre: str) -> int:
     repo.execute("""
@@ -275,7 +266,6 @@ def get_or_create_grupo_etario(repo: FirebirdRepository, nombre: str):
 
     return repo.fetch_one()[0]
 
-
 def get_or_create_grupo_etnico(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -296,7 +286,6 @@ def get_or_create_grupo_etnico(repo: FirebirdRepository, nombre: str):
     """, (nombre,))
 
     return repo.fetch_one()[0]
-
 
 def get_or_create_condicion_alfabetismo(repo: FirebirdRepository, nombre: str):
     if not nombre:
@@ -342,7 +331,6 @@ def get_or_create_escolaridad(repo: FirebirdRepository, nombre: str):
 
     return repo.fetch_one()[0]
 
-
 def get_or_create_area_geografica(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -363,7 +351,6 @@ def get_or_create_area_geografica(repo: FirebirdRepository, nombre: str):
     """, (nombre,))
 
     return repo.fetch_one()[0]
-
 
 def get_or_create_estado_ebriedad(repo: FirebirdRepository, nombre: str):
     if not nombre:
@@ -387,7 +374,6 @@ def get_or_create_estado_ebriedad(repo: FirebirdRepository, nombre: str):
     """, (codigo, nombre))
 
     return repo.fetch_one()[0]
-
 
 def get_or_create_ocupacion(repo: FirebirdRepository, nombre: str):
     if not nombre:
@@ -421,7 +407,6 @@ def get_or_create_ocupacion(repo: FirebirdRepository, nombre: str):
 
     return repo.fetch_one()[0]
 
-
 def create_persona(repo: FirebirdRepository, id_sexo: int, edad: int | None) -> int:
     repo.execute("""
         INSERT INTO persona (id_sexo, edad)
@@ -429,7 +414,6 @@ def create_persona(repo: FirebirdRepository, id_sexo: int, edad: int | None) -> 
         RETURNING id
     """, (id_sexo, edad))
     return repo.fetch_one()[0]
-
 
 def insert_falta_judicial(
     repo: FirebirdRepository,
@@ -477,11 +461,9 @@ def insert_falta_judicial(
         id_fuente_dato
     ))
 
-
 def parse_mes_to_int(mes_texto: str):
     mes_norm = normalize_name(mes_texto)
     return MESES_ES.get(mes_norm)
-
 
 def run_faltas_judiciales_etl(
     repo: FirebirdRepository,
