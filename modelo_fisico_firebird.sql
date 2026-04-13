@@ -454,12 +454,14 @@ CREATE TABLE hecho_delictivo_mujer_estadistica (
     id_fecha INTEGER NOT NULL,
     id_tipo_hecho_delictivo INTEGER NOT NULL,
     id_delito INTEGER,
+    id_estado_caso INTEGER,
     cantidad INTEGER NOT NULL,
     CONSTRAINT pk_hd_mujer_estadistica PRIMARY KEY (id),
     CONSTRAINT fk_hd_mujer_est_dep FOREIGN KEY (id_departamento) REFERENCES departamento (id),
     CONSTRAINT fk_hd_mujer_est_fecha FOREIGN KEY (id_fecha) REFERENCES fecha (id),
     CONSTRAINT fk_hd_mujer_est_tipo FOREIGN KEY (id_tipo_hecho_delictivo) REFERENCES tipo_hecho_delictivo (id),
     CONSTRAINT fk_hd_mujer_est_delito FOREIGN KEY (id_delito) REFERENCES delito (id),
+    CONSTRAINT fk_hd_mujer_est_estado_caso FOREIGN KEY (id_estado_caso) REFERENCES estado_caso (id),
     CONSTRAINT ck_hd_mujer_est_cantidad CHECK (cantidad >= 0)
 );
 

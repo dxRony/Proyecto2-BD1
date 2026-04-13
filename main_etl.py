@@ -19,7 +19,10 @@ from etl.violencia.exhumaciones_etl import run_exhumaciones_etl
 from etl.violencia.agraviados_etl import run_agraviados_etl
 from etl.violencia.sindicatos_etl import run_sindicatos_etl
 from etl.violencia.evaluacion_inacif_etl import run_inacif_etl
-
+from etl.violencia.violencia_mujer_etl import run_denuncias_vcm_etl
+from etl.violencia.delitos_vida_mujer_etl import run_delitos_vida_mujer_etl
+from etl.violencia.hechos_delictivos_mujer_etl import run_hechos_delictivos_mujer_etl
+from etl.violencia.evaluaciones_inacif_mujer_etl import run_evaluaciones_inacif_mujer_etl
 
 #enfermedades transmitidas por vectores
 VECTOR_MODULES = {
@@ -137,6 +140,34 @@ INACIF_MODULES = {
     "inacif": "Violencia/Hechos-Delicitivos/Evaluacion Medicos - INACIF/20240528162820xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx"
 }
 
+VIOLENCIA_MUJER_MODULES = {
+    "denuncias_vcm": (
+        "Violencia/Violencia contra la mujer/Denuncias registradas/Denuncias del MP por el delito de VCM.xlsx",
+        "Denuncias del MP por el delito de VCM"
+    ),
+}
+
+DELITOS_VIDA_MUJER_MODULES = {
+    "delitos_vida_mujer": (
+        "Violencia/Violencia contra la mujer/Delictos contra la vida y feminicidios/Delitos contra la vida de las mujeres y femicidios del MP.xlsx",
+        "Delitos contra la vida de las mujeres y femicidios del MP"
+    ),
+}
+
+HECHOS_DELICTIVOS_MUJER_MODULES = {
+    "hechos_delictivos_mujer": (
+        "Violencia/Violencia contra la mujer/Hechos delicttivos/Hechos delictivos contra mujeres de 2008 al 2024.xlsx",
+        "Hechos delictivos contra mujeres de 2008 al 2024"
+    ),
+}
+
+EVALUACIONES_INACIF_MUJER_MODULES = {
+    "evaluaciones_inacif_mujer": (
+        "Violencia/Violencia contra la mujer/Evaluaciones Inacif/Evaluciones realizadas por el INACIF 2008 al 2024.xlsx",
+        "Evaluaciones realizadas por el INACIF 2008 al 2024"
+    ),
+}
+
 def run_catalogs(repo: FirebirdRepository):
     print("Cargando catálogos base")
 
@@ -236,6 +267,26 @@ def run_module(module_name: str, repo: FirebirdRepository):
         run_inacif_etl(repo, INACIF_MODULES[module_name])
         return
 
+    if module_name in VIOLENCIA_MUJER_MODULES:
+        file_path, dataset_name = VIOLENCIA_MUJER_MODULES[module_name]
+        run_denuncias_vcm_etl(repo, file_path, dataset_name)
+        return
+        
+    if module_name in DELITOS_VIDA_MUJER_MODULES:
+        file_path, dataset_name = DELITOS_VIDA_MUJER_MODULES[module_name]
+        run_delitos_vida_mujer_etl(repo, file_path, dataset_name)
+        return
+    
+    if module_name in HECHOS_DELICTIVOS_MUJER_MODULES:
+        file_path, dataset_name = HECHOS_DELICTIVOS_MUJER_MODULES[module_name]
+        run_hechos_delictivos_mujer_etl(repo, file_path, dataset_name)
+        return
+    
+    if module_name in EVALUACIONES_INACIF_MUJER_MODULES:
+        file_path, dataset_name = EVALUACIONES_INACIF_MUJER_MODULES[module_name]
+        run_evaluaciones_inacif_mujer_etl(repo, file_path, dataset_name)
+        return
+    
     print("Modulo no reconocido")
 
 def main():
