@@ -287,35 +287,34 @@ C:.
 |   Proyecto2_BD1_2026.docx
 \---Violencia
     +---Faltas judiciales
-    |   |   20240524231759eHmz6DmFKboNQ5Y3OlqNkbi9izmXULaP.xlsx
+    |   |   20240524231759eHmz6DmFKboNQ5Y3OlqNkbi9izmXULaP.xlsx (ya)
     |   \---Diccionario
-    |           20240524231842pWf6BcBWj8taVS3Q3mRKxgDsvwPejgH8.xlsx
+    |           20240524231842pWf6BcBWj8taVS3Q3mRKxgDsvwPejgH8.xlsx (ya)
     +---Hechos-Delicitivos
     |   +---Agraviados
     |   |       20240528163342pWf6BcBWj8taVS3Q3mRKxgDsvwPejgH8.xlsx
-    |   +---Diccionarios
-    |   |       20240528164137Qdung3Ix6ZUh8TejqRC7gLeXcHuhwxAl.xlsx
-    |   |       20240528164332NudErojEnmloPqTMhSRutgPsnoFkJOt2.xlsx
-    |   |       202405281644096rGNQ5SfAlepmPGfYTovW9MF6X2turyT.xlsx
     |   |       2024052816445767yh4FO7s1alkNyrsl89UhkrYrkzGtwv.xlsx
-    |   |       20240528164527eLWpCfULaJgv2r4fEn6RGLqXy5knWzmf.xlsx
-    |   |       20240528164600h2NuX0RKNUd61gZu7ox4PQXgDUDgLC9Y.xlsx
-    |   |       20240528164645mzIxoTsLKBOBI3sLQROJqn4f0HCNodaB.xlsx
-    |   |       20240528164720xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx
     |   +---Evaluacion Medicos - INACIF
     |   |       20240528162820xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx
+    |   |       20240528164137Qdung3Ix6ZUh8TejqRC7gLeXcHuhwxAl.xlsx
     |   +---Exhumaciones
     |   |       20240528163020xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx
+    |   |       20240528164332NudErojEnmloPqTMhSRutgPsnoFkJOt2.xlsx
     |   +---Necropsias
     |   |       20240528163210puPW7O9wJalS7I9yToxkpQLgLwNElAny.xlsx
+    |   |       202405281644096rGNQ5SfAlepmPGfYTovW9MF6X2turyT.xlsx
     |   +---Organismo judical - Sentenciados
     |   |       20240528163614FaXwFKh8NYNiFivgBo98JEbaVMRUhaFG.xlsx
+    |   |       20240528164600h2NuX0RKNUd61gZu7ox4PQXgDUDgLC9Y.xlsx
     |   +---PNC - Detenciados
     |   |       20240528163735e7G5K5EZOlGPCBiH4ROtQRgfm5sTifW1.xlsx
+    |   |       20240528164645mzIxoTsLKBOBI3sLQROJqn4f0HCNodaB.xlsx
     |   +---PNC -Victimas
-    |   |       20240528163848NcFYbAN6bA92ZKRG7mLINYvyZoVmXEDA.xlsx
+    |   |       20240528163848NcFYbAN6bA92ZKRG7mLINYvyZoVmXEDA.xlsx (ya)
+    |   |       20240528164720xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx (ya)
     |   \---Sindicatos
     |           20240528163458VEdqlo5oBmhO5cvKTQhYRYj2D05gxCla.xlsx
+    |           20240528164527eLWpCfULaJgv2r4fEn6RGLqXy5knWzmf.xlsx
     |   +---Violencia contra la mujer
     |   +---Atencion brindada
     |   |       Atenciones brindades por el Instituto de la Víctima 2020-2023(1).xlsx

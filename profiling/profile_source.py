@@ -108,8 +108,6 @@ def profile_excel(file_path: str, preview_rows: int = 10, max_sheets: int | None
             print(f"Shape crudo: {df.shape}")
             print(df.head(preview_rows))
 
-            # intento alternativo usando una fila probable de encabezado
-            # esto no siempre será correcto, pero ayuda a inspeccionar rápido
             if df.shape[0] > 3:
                 try:
                     df_header3 = pd.read_excel(file_path, sheet_name=sheet, header=3)

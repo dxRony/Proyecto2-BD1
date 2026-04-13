@@ -136,7 +136,6 @@ def insert_queja(
 def build_dataframe_from_excel(file_path: str) -> pd.DataFrame:
     raw = pd.read_excel(file_path, sheet_name="C1", header=None)
 
-    # columnas útiles reales según profiling
     raw = raw.iloc[:, :9].copy()
 
     raw.columns = [

@@ -10,6 +10,10 @@ from etl.salud.maternal_etl import run_maternal_etl
 from etl.violencia.quejas_mineduc_etl import run_quejas_mineduc_etl
 from etl.violencia.discriminacion_etl import run_discriminacion_etl
 from etl.violencia.violencia_intrafamiliar_etl import run_violencia_intrafamiliar_etl
+from etl.violencia.faltas_judiciales_etl import run_faltas_judiciales_etl
+from etl.violencia.pnc_victimas_etl import run_pnc_victimas_etl
+from etl.violencia.pnc_detenidos_etl import run_pnc_detenidos_etl
+from etl.violencia.oj_sentenciados_etl import run_oj_sentenciados_etl
 
 #enfermedades transmitidas por vectores
 VECTOR_MODULES = {
@@ -64,6 +68,34 @@ VIOLENCIA_INTRAFAMILIAR_MODULES = {
         "Violencia/Violencia intrafamiliar/2024/base-de-datos-violencia-intrafamiliar-ano-2024_v3.xlsx",
         "Violencia/Violencia intrafamiliar/2024/diccionario-de-variables-violencia-intrafamiliar.xlsx",
         "Violencia intrafamiliar 2024"
+    ),
+}
+
+FALTAS_JUDICIALES_MODULES = {
+    "faltas_judiciales": (
+        "Violencia/Faltas judiciales/20240524231759eHmz6DmFKboNQ5Y3OlqNkbi9izmXULaP.xlsx",
+        "Faltas judiciales"
+    ),
+}
+
+PNC_VICTIMAS_MODULES = {
+    "pnc_victimas": (
+        "Violencia/Hechos-Delicitivos/PNC -Victimas/20240528163848NcFYbAN6bA92ZKRG7mLINYvyZoVmXEDA.xlsx",
+        "PNC Víctimas"
+    ),
+}
+
+PNC_DETENIDOS_MODULES = {
+    "pnc_detenidos": (
+        "Violencia/Hechos-Delicitivos/PNC - Detenciados/20240528163735e7G5K5EZOlGPCBiH4ROtQRgfm5sTifW1.xlsx",
+        "PNC Detenidos"
+    ),
+}
+
+OJ_SENTENCIADOS_MODULES = {
+    "oj_sentenciados": (
+        "Violencia/Hechos-Delicitivos/Organismo judical - Sentenciados/20240528163614FaXwFKh8NYNiFivgBo98JEbaVMRUhaFG.xlsx",
+        "OJ Sentenciados"
     ),
 }
 
@@ -122,7 +154,27 @@ def run_module(module_name: str, repo: FirebirdRepository):
         run_violencia_intrafamiliar_etl(repo, file_path, dict_path, dataset_name)
         return
 
-    print("Módulo no reconocido")
+    if module_name in FALTAS_JUDICIALES_MODULES:
+        file_path, dataset_name = FALTAS_JUDICIALES_MODULES[module_name]
+        run_faltas_judiciales_etl(repo, file_path, dataset_name)
+        return
+
+    if module_name in PNC_VICTIMAS_MODULES:
+        file_path, dataset_name = PNC_VICTIMAS_MODULES[module_name]
+        run_pnc_victimas_etl(repo, file_path, dataset_name)
+        return
+    
+    if module_name in PNC_DETENIDOS_MODULES:
+        file_path, dataset_name = PNC_DETENIDOS_MODULES[module_name]
+        run_pnc_detenidos_etl(repo, file_path, dataset_name)
+        return
+
+    if module_name in OJ_SENTENCIADOS_MODULES:
+        file_path, dataset_name = OJ_SENTENCIADOS_MODULES[module_name]
+        run_oj_sentenciados_etl(repo, file_path, dataset_name)
+        return
+
+    print("Modulo no reconocido")
 
 def main():
     parser = argparse.ArgumentParser(description="ETL Proyecto BD1")
