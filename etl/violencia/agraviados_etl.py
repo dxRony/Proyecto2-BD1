@@ -228,6 +228,8 @@ def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int)
 
 
 def build_municipio_name_map(repo: FirebirdRepository) -> dict:
+    get_or_create_municipio_ignorado(repo)
+
     repo.execute("""
         SELECT id, nombre
         FROM municipio
@@ -239,7 +241,6 @@ def build_municipio_name_map(repo: FirebirdRepository) -> dict:
         result[normalize_name(nombre)] = municipio_id
     return result
 
-
 def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     nombre_norm = normalize_name(nombre)
 
@@ -249,8 +250,12 @@ def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     elif nombre_norm in {"mujer", "mujeres", "femenino"}:
         codigo = "M"
         nombre_final = "Mujer"
+    elif nombre_norm in {"", "ignorado", "ignorada", "sd", "s/d", "999", "9"}:
+        codigo = "9"
+        nombre_final = "Ignorado"
     else:
-        raise ValueError(f"Sexo no reconocido: {nombre}")
+        codigo = "9"
+        nombre_final = "Ignorado"
 
     repo.execute("""
         SELECT id
@@ -601,44 +606,57 @@ def run_agraviados_etl(
             continue
 
         municipio_nombre = normalize_text(row.get("municipio_denuncia"))
-        municipio_id = municipio_name_map.get(normalize_name(municipio_nombre))
-        if not municipio_id:
+        municipio_norm = normalize_name(municipio_nombre)
+
+        if municipio_norm in {"", "ignorado", "ignorada", "9999", "999", "sd", "s/d"}:
             skipped_missing_municipio += 1
-            continue
+            municipio_id = municipio_name_map.get("ignorado")
+        else:
+            municipio_id = municipio_name_map.get(municipio_norm)
+            if not municipio_id:
+                skipped_missing_municipio += 1
+                municipio_id = municipio_name_map.get("ignorado")
 
-        sexo_nombre = normalize_text(row.get("sexo_per"))
-        if normalize_name(sexo_nombre) not in {"hombre", "mujer"}:
+        if not municipio_id:
+            municipio_id = get_or_create_municipio_ignorado(repo)
+
+        sexo_nombre = clean_catalog_value(row.get("sexo_per"))
+        if normalize_name(sexo_nombre) == "ignorado":
             skipped_missing_sexo += 1
-            continue
 
-        try:
-            sexo_id = get_or_create_sexo(repo, sexo_nombre)
-        except Exception:
-            skipped_missing_sexo += 1
-            continue
+        sexo_id = get_or_create_sexo(repo, sexo_nombre)
 
-        estado_civil_nombre = normalize_text(row.get("estado_civil"))
-        if normalize_name(estado_civil_nombre) in {"ignorado", "ignorada"}:
+        estado_civil_nombre = clean_catalog_value(row.get("estado_civil"))
+        if normalize_name(estado_civil_nombre) == "ignorado":
             estado_civil_nombre = ""
-        estado_civil_id = get_or_create_estado_conyugal(repo, estado_civil_nombre) if estado_civil_nombre else None
 
-        grupo_etario_nombre = normalize_text(row.get("edad_quinquenales"))
-        if normalize_name(grupo_etario_nombre) in {"ignorado", "ignorada"}:
+        estado_civil_id = get_or_create_estado_conyugal(repo, estado_civil_nombre) if estado_civil_nombre else None
+        
+        grupo_etario_nombre = clean_catalog_value(row.get("edad_quinquenales"))
+        if normalize_name(grupo_etario_nombre) == "ignorado":
             grupo_etario_nombre = ""
+            
         grupo_etario_id = get_or_create_grupo_etario(repo, grupo_etario_nombre) if grupo_etario_nombre else None
 
-        delito_nombre = normalize_text(row.get("delito_com"))
-        categoria_delito_nombre = normalize_text(row.get("principales_delitos"))
+        delito_nombre = clean_catalog_value(row.get("delito_com"))
+        categoria_delito_nombre = clean_catalog_value(row.get("principales_delitos"))
 
-        if not delito_nombre:
+        if normalize_name(categoria_delito_nombre) == "ignorado":
+            categoria_delito_nombre = None
+
+        if normalize_name(delito_nombre) == "ignorado":
             skipped_missing_delito += 1
             continue
 
         delito_id = get_or_create_delito(repo, delito_nombre, categoria_delito_nombre)
 
-        franja_nombre = normalize_text(row.get("g_hora_denuncia"))
-        if not franja_nombre:
-            franja_nombre = normalize_text(row.get("g_hora_denuncia_man_tar_noc"))
+        franja_nombre = clean_catalog_value(row.get("g_hora_denuncia"))
+        if normalize_name(franja_nombre) == "ignorado":
+            franja_nombre = clean_catalog_value(row.get("g_hora_denuncia_man_tar_noc"))
+
+        if normalize_name(franja_nombre) == "ignorado":
+            franja_nombre = ""
+            
         franja_id = get_or_create_franja_horaria(repo, franja_nombre) if franja_nombre else None
 
         persona_id = create_persona(repo, sexo_id, None)

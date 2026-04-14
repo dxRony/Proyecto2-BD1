@@ -271,15 +271,10 @@ C:.
                 diccionario-de-variables-violencia-intrafamiliar.xlsx (ya)
 
 
-
+TODO:
 scraping de:
             - embarazos
             - sentencias
 inserts faker
 consultas
 documentar codigo
-
-
-agraviados
-exhumaciones
-necropsias
