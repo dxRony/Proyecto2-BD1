@@ -211,51 +211,51 @@ C:.
 |           morbilidad-neonatal-2012-al-2024.csv (ya)
 \---Violencia
     +---Faltas judiciales
-    |   |   20240524231759eHmz6DmFKboNQ5Y3OlqNkbi9izmXULaP.xlsx
+    |   |   20240524231759eHmz6DmFKboNQ5Y3OlqNkbi9izmXULaP.xlsx (ya)
     |   \---Diccionario
-    |           20240524231842pWf6BcBWj8taVS3Q3mRKxgDsvwPejgH8.xlsx
+    |           20240524231842pWf6BcBWj8taVS3Q3mRKxgDsvwPejgH8.xlsx (ya)
     +---Hechos-Delicitivos
     |   +---Agraviados
-    |   |       20240528163342pWf6BcBWj8taVS3Q3mRKxgDsvwPejgH8.xlsx
+    |   |       20240528163342pWf6BcBWj8taVS3Q3mRKxgDsvwPejgH8.xlsx (ya)
     |   +---Diccionarios
-    |   |       20240528164137Qdung3Ix6ZUh8TejqRC7gLeXcHuhwxAl.xlsx
-    |   |       20240528164332NudErojEnmloPqTMhSRutgPsnoFkJOt2.xlsx
-    |   |       202405281644096rGNQ5SfAlepmPGfYTovW9MF6X2turyT.xlsx
-    |   |       2024052816445767yh4FO7s1alkNyrsl89UhkrYrkzGtwv.xlsx
-    |   |       20240528164527eLWpCfULaJgv2r4fEn6RGLqXy5knWzmf.xlsx
-    |   |       20240528164600h2NuX0RKNUd61gZu7ox4PQXgDUDgLC9Y.xlsx
-    |   |       20240528164645mzIxoTsLKBOBI3sLQROJqn4f0HCNodaB.xlsx
-    |   |       20240528164720xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx
+    |   |       20240528164137Qdung3Ix6ZUh8TejqRC7gLeXcHuhwxAl.xlsx (ya)
+    |   |       20240528164332NudErojEnmloPqTMhSRutgPsnoFkJOt2.xlsx (ya)
+    |   |       202405281644096rGNQ5SfAlepmPGfYTovW9MF6X2turyT.xlsx (ya)
+    |   |       2024052816445767yh4FO7s1alkNyrsl89UhkrYrkzGtwv.xlsx (ya)
+    |   |       20240528164527eLWpCfULaJgv2r4fEn6RGLqXy5knWzmf.xlsx (ya)
+    |   |       20240528164600h2NuX0RKNUd61gZu7ox4PQXgDUDgLC9Y.xlsx (ya)
+    |   |       20240528164645mzIxoTsLKBOBI3sLQROJqn4f0HCNodaB.xlsx (ya)
+    |   |       20240528164720xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx (ya)
     |   +---Evaluacion Medicos - INACIF
-    |   |       20240528162820xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx
+    |   |       20240528162820xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx (ya)
     |   +---Exhumaciones
-    |   |       20240528163020xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx
+    |   |       20240528163020xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx (ya)
     |   +---Necropsias
-    |   |       20240528163210puPW7O9wJalS7I9yToxkpQLgLwNElAny.xlsx
+    |   |       20240528163210puPW7O9wJalS7I9yToxkpQLgLwNElAny.xlsx (ya)
     |   +---Organismo judical - Sentenciados
-    |   |       20240528163614FaXwFKh8NYNiFivgBo98JEbaVMRUhaFG.xlsx
+    |   |       20240528163614FaXwFKh8NYNiFivgBo98JEbaVMRUhaFG.xlsx (ya)
     |   +---PNC - Detenciados
-    |   |       20240528163735e7G5K5EZOlGPCBiH4ROtQRgfm5sTifW1.xlsx
+    |   |       20240528163735e7G5K5EZOlGPCBiH4ROtQRgfm5sTifW1.xlsx (ya)
     |   +---PNC -Victimas
-    |   |       20240528163848NcFYbAN6bA92ZKRG7mLINYvyZoVmXEDA.xlsx
+    |   |       20240528163848NcFYbAN6bA92ZKRG7mLINYvyZoVmXEDA.xlsx (ya)
     |   \---Sindicatos
-    |           20240528163458VEdqlo5oBmhO5cvKTQhYRYj2D05gxCla.xlsx
+    |           20240528163458VEdqlo5oBmhO5cvKTQhYRYj2D05gxCla.xlsx (ya)
     |   +---Violencia contra la mujer
     |   +---Atencion brindada
-    |   |       Atenciones brindades por el Instituto de la Víctima 2020-2023(1).xlsx
+    |   |       Atenciones brindades por el Instituto de la Víctima 2020-2023(1).xlsx (ya)
     |   +---Delictos contra la vida y feminicidios
-    |   |       Delitos contra la vida de las mujeres y femicidios del MP.xlsx
+    |   |       Delitos contra la vida de las mujeres y femicidios del MP.xlsx (ya)
     |   +---Denuncias registradas
-    |   |       Denuncias del MP por el delito de VCM.xlsx
+    |   |       Denuncias del MP por el delito de VCM.xlsx (ya)
     |   +---Evaluaciones Inacif
-    |   |       Evaluciones realizadas por el INACIF 2008 al 2024.xlsx
+    |   |       Evaluciones realizadas por el INACIF 2008 al 2024.xlsx (ya)
     |   +---Hechos delicttivos
-    |   |       Hechos delictivos contra mujeres de 2008 al 2024.xlsx
+    |   |       Hechos delictivos contra mujeres de 2008 al 2024.xlsx (ya)
     |   +---Medidas de seguridad
-    |   |       Medidas de Seguridad 2012-2024.xlsx
+    |   |       Medidas de Seguridad 2012-2024.xlsx (ya)
     |   \---Sentencias por delito
-    |           Sentencias del MP por el delito de VCM.xlsx
-    |           SENTENCIAS DEL OJ POR EL DELITO DE VCM 2008-2024.xlsx
+    |           Sentencias del MP por el delito de VCM.xlsx (ya)
+    |           SENTENCIAS DEL OJ POR EL DELITO DE VCM 2008-2024.xlsx (ya)
     +---Violencia contra la ninez
     |   +---conjunto_de_datos_sdem_enti_2022
     |   |   +---catalogos
@@ -272,36 +272,20 @@ C:.
     |   \---Quejas Mineduc
     |           20240719123138C8M6SpIQkU1dO569us4WzmhiEojxPhwf.xlsx (ya)
     +---Violencia estructural
-    |       CASOS DISCRIMINACIÓN 2016-2023.xls
+    |       CASOS DISCRIMINACIÓN 2016-2023.xls (ya)
     \---Violencia intrafamiliar
         +---2023
-        |   |   2024052300200h2NuX0RKNUd61gZu7ox4PQXgDUDgLC9Y.xlsx
+        |   |   2024052300200h2NuX0RKNUd61gZu7ox4PQXgDUDgLC9Y.xlsx (ya)
         |   \---Diccionario
-        |           2024052300613QDinUvuRa9GjopyXaTuNMXc3gd6Jq1Q1.xlsx
+        |           2024052300613QDinUvuRa9GjopyXaTuNMXc3gd6Jq1Q1.xlsx (ya)
         \---2024
-                base-de-datos-violencia-intrafamiliar-ano-2024_v3.xlsx
-                diccionario-de-variables-violencia-intrafamiliar.xlsx
+                base-de-datos-violencia-intrafamiliar-ano-2024_v3.xlsx (ya)
+                diccionario-de-variables-violencia-intrafamiliar.xlsx (ya)
 
 
 C:.
 |   Proyecto2_BD1_2026.docx
 \---Violencia
-    |   +---Violencia contra la mujer
-    |   +---Atencion brindada
-    |   |       Atenciones brindades por el Instituto de la Víctima 2020-2023(1).xlsx
-    |   +---Delictos contra la vida y feminicidios
-    |   |       Delitos contra la vida de las mujeres y femicidios del MP.xlsx (ya)
-    |   +---Denuncias registradas
-    |   |       Denuncias del MP por el delito de VCM.xlsx (ya)
-    |   +---Evaluaciones Inacif
-    |   |       Evaluciones realizadas por el INACIF 2008 al 2024.xlsx
-    |   +---Hechos delicttivos
-    |   |       Hechos delictivos contra mujeres de 2008 al 2024.xlsx (ya)
-    |   +---Medidas de seguridad
-    |   |       Medidas de Seguridad 2012-2024.xlsx
-    |   \---Sentencias por delito
-    |           Sentencias del MP por el delito de VCM.xlsx
-    |           SENTENCIAS DEL OJ POR EL DELITO DE VCM 2008-2024.xlsx
     +---Violencia contra la ninez
     |   +---conjunto_de_datos_sdem_enti_2022
     |   |   +---catalogos
@@ -328,4 +312,4 @@ C:.
 7. Sentencias (MP + OJ)
 
 
-python -m profiling.profile_source --file "Violencia/Violencia contra la mujer/Hechos delicttivos/Hechos delictivos contra mujeres de 2008 al 2024.xlsx" --rows 15
+python -m profiling.profile_source --file "Violencia/Violencia contra la mujer/Sentencias por delito/Sentencias del MP por el delito de VCM.xlsx" --rows 15

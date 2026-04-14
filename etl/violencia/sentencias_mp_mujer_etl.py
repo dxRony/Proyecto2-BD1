@@ -1,0 +1,307 @@
+from datetime import date
+from pathlib import Path
+import hashlib
+import unicodedata
+
+import pandas as pd
+
+from repositories.firebird_repository import FirebirdRepository
+
+
+NOMBRES_MESES_ES = {
+    1: "Enero",
+    2: "Febrero",
+    3: "Marzo",
+    4: "Abril",
+    5: "Mayo",
+    6: "Junio",
+    7: "Julio",
+    8: "Agosto",
+    9: "Septiembre",
+    10: "Octubre",
+    11: "Noviembre",
+    12: "Diciembre",
+}
+
+DIAS_ES = {
+    0: "Lunes",
+    1: "Martes",
+    2: "Miércoles",
+    3: "Jueves",
+    4: "Viernes",
+    5: "Sábado",
+    6: "Domingo",
+}
+
+
+def normalize_text(value) -> str:
+    if value is None or pd.isna(value):
+        return ""
+    return str(value).strip()
+
+
+def normalize_name(text) -> str:
+    if text is None or pd.isna(text):
+        return ""
+    text = str(text).strip().lower()
+    text = unicodedata.normalize("NFD", text)
+    text = "".join(c for c in text if unicodedata.category(c) != "Mn")
+    text = " ".join(text.split())
+    return text
+
+
+def safe_int(value):
+    if value is None or pd.isna(value):
+        return None
+    try:
+        text = str(value).strip()
+        if normalize_name(text) in {"ignorada", "ignorado", "nan", "", "sd", "s/d"}:
+            return None
+        return int(float(text))
+    except Exception:
+        return None
+
+
+def build_unique_code(text: str, prefix: str = "", max_len: int = 20) -> str:
+    base = normalize_name(text).replace(" ", "_").upper()
+    digest = hashlib.md5(base.encode("utf-8")).hexdigest()[:3].upper()
+
+    prefix = prefix.upper() if prefix else "X"
+
+    reserve = len(prefix) + 1 + len(digest)
+    cut_len = max_len - reserve
+    if cut_len < 1:
+        cut_len = 1
+
+    trimmed = base[:cut_len]
+    return f"{prefix}{trimmed}_{digest}"
+
+
+def canonicalize_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
+    expected_columns = [
+        "fecha",
+        "dia",
+        "mes",
+        "anio",
+        "indicador",
+        "valor",
+    ]
+
+    if len(df.columns) < len(expected_columns):
+        raise ValueError(
+            f"Se esperaban al menos {len(expected_columns)} columnas, pero llegaron {len(df.columns)}"
+        )
+
+    rename_map = {}
+    for idx, new_name in enumerate(expected_columns):
+        rename_map[df.columns[idx]] = new_name
+
+    return df.rename(columns=rename_map)
+
+
+def clean_catalog_value(value: str, default: str = "Ignorado") -> str:
+    text = normalize_text(value)
+    norm = normalize_name(text)
+
+    if norm in {
+        "",
+        "sd",
+        "s/d",
+        "sin seleccion",
+        "sin selección",
+        "no registrado",
+        "no registrada",
+        "no registrados",
+        "no registradas",
+        "nan",
+        "n/a",
+        "na",
+    }:
+        return default
+
+    return text
+
+
+def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> int:
+    repo.execute("""
+        SELECT id
+        FROM fuente_dato
+        WHERE LOWER(institucion) = LOWER(?)
+          AND LOWER(dataset) = LOWER(?)
+          AND LOWER(tipo_fuente) = LOWER(?)
+    """, ("MP", dataset_name, "Excel"))
+
+    row = repo.fetch_one()
+    if row:
+        return row[0]
+
+    repo.execute("""
+        INSERT INTO fuente_dato (institucion, dataset, tipo_fuente)
+        VALUES (?, ?, ?)
+        RETURNING id
+    """, ("MP", dataset_name, "Excel"))
+    return repo.fetch_one()[0]
+
+
+def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int):
+    fecha_str = f"{anio:04d}-{mes:02d}-{dia:02d}"
+
+    repo.execute("""
+        SELECT id
+        FROM fecha
+        WHERE fecha = ?
+    """, (fecha_str,))
+    row = repo.fetch_one()
+    if row:
+        return row[0]
+
+    fecha_obj = date(anio, mes, dia)
+
+    repo.execute("""
+        INSERT INTO fecha (fecha, anio, mes, nombre_mes, dia, dia_semana)
+        VALUES (?, ?, ?, ?, ?, ?)
+        RETURNING id
+    """, (
+        fecha_str,
+        anio,
+        mes,
+        NOMBRES_MESES_ES[mes],
+        dia,
+        DIAS_ES[fecha_obj.weekday()]
+    ))
+    return repo.fetch_one()[0]
+
+
+def get_or_create_tipo_fallo(repo: FirebirdRepository, nombre: str):
+    nombre = clean_catalog_value(nombre, "Ignorado")
+
+    repo.execute("""
+        SELECT id
+        FROM tipo_fallo
+        WHERE LOWER(nombre) = LOWER(?)
+    """, (nombre,))
+    row = repo.fetch_one()
+    if row:
+        return row[0]
+
+    codigo = build_unique_code(nombre, prefix="TF", max_len=20)
+
+    repo.execute("""
+        INSERT INTO tipo_fallo (codigo, nombre)
+        VALUES (?, ?)
+        RETURNING id
+    """, (codigo, nombre))
+    return repo.fetch_one()[0]
+
+
+def insert_sentencia_mp_estadistica(
+    repo: FirebirdRepository,
+    id_fecha: int,
+    id_tipo_fallo: int,
+    cantidad: int
+):
+    repo.execute("""
+        INSERT INTO sentencias_mp_estadistica (
+            id_fecha,
+            id_tipo_fallo,
+            cantidad
+        )
+        VALUES (?, ?, ?)
+    """, (
+        id_fecha,
+        id_tipo_fallo,
+        cantidad
+    ))
+
+
+def build_aggregated_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+
+    df["fecha"] = pd.to_datetime(df["fecha"], errors="coerce")
+    df["indicador"] = df["indicador"].apply(lambda x: clean_catalog_value(x, "Ignorado"))
+    df["valor"] = df["valor"].apply(lambda x: safe_int(x) or 0)
+
+    df = df[df["fecha"].notna()].copy()
+    df = df[df["valor"] > 0].copy()
+
+    df["anio_num"] = df["fecha"].dt.year
+    df["mes_num"] = df["fecha"].dt.month
+    df["dia_num"] = df["fecha"].dt.day
+
+    grouped = (
+        df.groupby(
+            ["anio_num", "mes_num", "dia_num", "indicador"],
+            as_index=False
+        )["valor"]
+        .sum()
+        .rename(columns={"valor": "cantidad"})
+    )
+
+    return grouped
+
+
+def run_sentencias_mp_vcm_etl(
+    repo: FirebirdRepository,
+    file_path: str,
+    dataset_name: str = "Sentencias del MP por el delito de VCM"
+):
+    if not Path(file_path).exists():
+        raise FileNotFoundError(f"No existe el archivo: {file_path}")
+
+    print(f"Procesando archivo: {file_path}")
+
+    df = pd.read_excel(file_path, sheet_name="Sentencias 2008-2024", header=0)
+    df = canonicalize_dataframe_columns(df)
+    df = build_aggregated_dataframe(df)
+
+    fuente_id = get_or_create_fuente_dato(repo, dataset_name)
+
+    inserted = 0
+    skipped_missing_fecha = 0
+    skipped_missing_tipo_fallo = 0
+
+    for _, row in df.iterrows():
+        anio = safe_int(row.get("anio_num"))
+        mes = safe_int(row.get("mes_num"))
+        dia = safe_int(row.get("dia_num"))
+
+        if anio is None or mes is None or dia is None:
+            skipped_missing_fecha += 1
+            continue
+
+        try:
+            fecha_id = get_or_create_fecha(repo, anio, mes, dia)
+        except Exception:
+            skipped_missing_fecha += 1
+            continue
+
+        indicador_nombre = clean_catalog_value(row.get("indicador"), "Ignorado")
+
+        try:
+            tipo_fallo_id = get_or_create_tipo_fallo(repo, indicador_nombre)
+        except Exception:
+            skipped_missing_tipo_fallo += 1
+            continue
+
+        cantidad = safe_int(row.get("cantidad")) or 0
+        if cantidad <= 0:
+            continue
+
+        insert_sentencia_mp_estadistica(
+            repo=repo,
+            id_fecha=fecha_id,
+            id_tipo_fallo=tipo_fallo_id,
+            cantidad=cantidad
+        )
+
+        inserted += 1
+
+        if inserted % 1000 == 0:
+            print(f"Procesados correctamente: {inserted}")
+
+    repo.commit()
+
+    print(f"Fuente de dato usada: {fuente_id}")
+    print(f"Insertados: {inserted}")
+    print(f"Omitidos por fecha inválida: {skipped_missing_fecha}")
+    print(f"Omitidos por tipo de fallo inválido: {skipped_missing_tipo_fallo}")

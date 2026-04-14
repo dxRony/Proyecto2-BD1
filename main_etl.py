@@ -23,6 +23,10 @@ from etl.violencia.violencia_mujer_etl import run_denuncias_vcm_etl
 from etl.violencia.delitos_vida_mujer_etl import run_delitos_vida_mujer_etl
 from etl.violencia.hechos_delictivos_mujer_etl import run_hechos_delictivos_mujer_etl
 from etl.violencia.evaluaciones_inacif_mujer_etl import run_evaluaciones_inacif_mujer_etl
+from etl.violencia.atenciones_brindadas_etl import run_atenciones_victima_mujer_etl
+from etl.violencia.medidas_seguridad_etl import run_medidas_seguridad_etl
+from etl.violencia.sentencias_mp_mujer_etl import run_sentencias_mp_vcm_etl
+from etl.violencia.sentencias_oj_mujer_etl import run_sentencias_oj_vcm_etl
 
 #enfermedades transmitidas por vectores
 VECTOR_MODULES = {
@@ -168,6 +172,34 @@ EVALUACIONES_INACIF_MUJER_MODULES = {
     ),
 }
 
+ATENCIONES_VICTIMA_MUJER_MODULES = {
+    "atenciones_victima_mujer": (
+        "Violencia/Violencia contra la mujer/Atencion brindada/Atenciones brindades por el Instituto de la Víctima 2020-2023(1).xlsx",
+        "Atenciones brindades por el Instituto de la Víctima 2020-2023"
+    ),
+}
+
+MEDIDAS_SEGURIDAD_MODULES = {
+    "medidas_seguridad": (
+        "Violencia/Violencia contra la mujer/Medidas de seguridad/Medidas de Seguridad 2012-2024.xlsx",
+        "Medidas de Seguridad"
+    ),
+}
+
+SENTENCIAS_MP_VCM_MODULES = {
+    "sentencias_mp_vcm": (
+        "Violencia/Violencia contra la mujer/Sentencias por delito/Sentencias del MP por el delito de VCM.xlsx",
+        "Sentencias del MP por el delito de VCM"
+    ),
+}
+
+SENTENCIAS_OJ_VCM_MODULES = {
+    "sentencias_oj_vcm": (
+        "Violencia/Violencia contra la mujer/Sentencias por delito/SENTENCIAS DEL OJ POR EL DELITO DE VCM 2008-2024.xlsx",
+        "SENTENCIAS DEL OJ POR EL DELITO DE VCM 2008-2024"
+    ),
+}
+
 def run_catalogs(repo: FirebirdRepository):
     print("Cargando catálogos base")
 
@@ -285,6 +317,26 @@ def run_module(module_name: str, repo: FirebirdRepository):
     if module_name in EVALUACIONES_INACIF_MUJER_MODULES:
         file_path, dataset_name = EVALUACIONES_INACIF_MUJER_MODULES[module_name]
         run_evaluaciones_inacif_mujer_etl(repo, file_path, dataset_name)
+        return
+    
+    if module_name in ATENCIONES_VICTIMA_MUJER_MODULES:
+        file_path, dataset_name = ATENCIONES_VICTIMA_MUJER_MODULES[module_name]
+        run_atenciones_victima_mujer_etl(repo, file_path, dataset_name)
+        return
+    
+    if module_name in MEDIDAS_SEGURIDAD_MODULES:
+        file_path, dataset_name = MEDIDAS_SEGURIDAD_MODULES[module_name]
+        run_medidas_seguridad_etl(repo, file_path, dataset_name)
+        return
+
+    if module_name in SENTENCIAS_MP_VCM_MODULES:
+        file_path, dataset_name = SENTENCIAS_MP_VCM_MODULES[module_name]
+        run_sentencias_mp_vcm_etl(repo, file_path, dataset_name)
+        return
+
+    if module_name in SENTENCIAS_OJ_VCM_MODULES:
+        file_path, dataset_name = SENTENCIAS_OJ_VCM_MODULES[module_name]
+        run_sentencias_oj_vcm_etl(repo, file_path, dataset_name)
         return
     
     print("Modulo no reconocido")
