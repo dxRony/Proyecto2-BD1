@@ -49,6 +49,53 @@ DIAS_ES = {
     6: "Domingo",
 }
 
+def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
+    repo.execute("""
+        SELECT id
+        FROM departamento
+        WHERE codigo = ?
+    """, ("9999",))
+    row = repo.fetch_one()
+    if row:
+        return row[0]
+
+    repo.execute("""
+        INSERT INTO departamento (codigo, nombre)
+        VALUES (?, ?)
+        RETURNING id
+    """, ("9999", "Ignorado"))
+
+    return repo.fetch_one()[0]
+
+
+def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
+    repo.execute("""
+        SELECT id
+        FROM municipio
+        WHERE codigo = ?
+    """, ("M99999",))
+    row = repo.fetch_one()
+    if row:
+        return row[0]
+
+    id_departamento = get_or_create_departamento_ignorado(repo)
+
+    repo.execute("""
+        INSERT INTO municipio (codigo, nombre, id_departamento)
+        VALUES (?, ?, ?)
+        RETURNING id
+    """, ("M99999", "Ignorado", id_departamento))
+
+    return repo.fetch_one()[0]
+
+def clean_catalog_value(value: str, default: str = "Ignorado") -> str:
+    text = normalize_text(value)
+    norm = normalize_name(text)
+
+    if norm in {"", "sd", "s/d", "ignorado", "ignorada", "999", "9999", "99", "nan"}:
+        return default
+
+    return text
 
 def normalize_text(value) -> str:
     if value is None or pd.isna(value):
@@ -177,6 +224,8 @@ def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> in
 
 
 def build_departamento_name_map(repo: FirebirdRepository) -> dict:
+    get_or_create_departamento_ignorado(repo)
+
     repo.execute("""
         SELECT id, nombre
         FROM departamento
@@ -188,18 +237,21 @@ def build_departamento_name_map(repo: FirebirdRepository) -> dict:
         result[normalize_name(nombre)] = dep_id
     return result
 
-
 def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     nombre_norm = normalize_name(nombre)
 
-    if nombre_norm in {"hombre", "masculino"}:
+    if nombre_norm in {"hombre", "hombres", "masculino"}:
         codigo = "H"
         nombre_final = "Hombre"
-    elif nombre_norm in {"mujer", "femenino"}:
+    elif nombre_norm in {"mujer", "mujeres", "femenino"}:
         codigo = "M"
         nombre_final = "Mujer"
+    elif nombre_norm in {"", "ignorado", "ignorada", "sd", "s/d", "999", "9"}:
+        codigo = "9"
+        nombre_final = "Ignorado"
     else:
-        raise ValueError(f"Sexo no reconocido: {nombre}")
+        codigo = "9"
+        nombre_final = "Ignorado"
 
     repo.execute("""
         SELECT id
@@ -509,21 +561,7 @@ def create_hecho_placeholder(
     id_fecha: int,
     id_delito: int
 ) -> int:
-    """
-    El dataset de OJ sentenciados no trae municipio detallado, solo departamento.
-    Insertamos un hecho mínimo con municipio placeholder = 1 si tu modelo exige municipio.
-    Ajusta esto si tu esquema tiene otro municipio por defecto.
-    """
-    repo.execute("""
-        SELECT FIRST 1 id
-        FROM municipio
-        ORDER BY id
-    """)
-    row = repo.fetch_one()
-    if not row:
-        raise ValueError("No existe ningún municipio cargado para crear hecho placeholder")
-
-    municipio_id = row[0]
+    municipio_id = get_or_create_municipio_ignorado(repo)
 
     repo.execute("""
         INSERT INTO hecho_delictivo (
@@ -584,40 +622,57 @@ def run_oj_sentenciados_etl(
             skipped_missing_fecha += 1
             continue
 
-        departamento_nombre = normalize_text(row.get("departamento"))
-        departamento_id = dep_map.get(normalize_name(departamento_nombre))
-        if not departamento_id:
+        departamento_nombre = clean_catalog_value(row.get("departamento"))
+        departamento_norm = normalize_name(departamento_nombre)
+
+        if departamento_norm == "ignorado":
             skipped_missing_departamento += 1
-            continue
+            departamento_id = dep_map.get("ignorado")
+        else:
+            departamento_id = dep_map.get(departamento_norm)
+            if not departamento_id:
+                skipped_missing_departamento += 1
+                departamento_id = dep_map.get("ignorado")
 
-        sexo_nombre = normalize_text(row.get("sexo"))
-        if not sexo_nombre:
+        if not departamento_id:
+            departamento_id = get_or_create_departamento_ignorado(repo)
+
+        sexo_nombre = clean_catalog_value(row.get("sexo"))
+        if normalize_name(sexo_nombre) == "ignorado":
             skipped_missing_sexo += 1
-            continue
 
-        try:
-            sexo_id = get_or_create_sexo(repo, sexo_nombre)
-        except Exception:
-            skipped_missing_sexo += 1
-            continue
+        sexo_id = get_or_create_sexo(repo, sexo_nombre)
 
-        delito_nombre = normalize_text(row.get("delito"))
-        if not delito_nombre:
+        delito_nombre = clean_catalog_value(row.get("delito"))
+        if normalize_name(delito_nombre) == "ignorado":
             skipped_missing_delito += 1
             continue
 
-        tipo_fallo_nombre = normalize_text(row.get("tipo_fallo"))
-        if not tipo_fallo_nombre:
+        tipo_fallo_nombre = clean_catalog_value(row.get("tipo_fallo"))
+        if normalize_name(tipo_fallo_nombre) == "ignorado":
             skipped_missing_fallo += 1
             continue
 
-        nacionalidad_nombre = normalize_text(row.get("nacionalidad"))
-        condicion_edad_nombre = normalize_text(row.get("men_may"))
-        involucramiento_nombre = normalize_text(row.get("involucramiento"))
-        tipo_ley_nombre = normalize_text(row.get("tipo_ley"))
-        titulo_nombre = normalize_text(row.get("titulo"))
-        capitulo_nombre = normalize_text(row.get("capitulo"))
+        nacionalidad_nombre = clean_catalog_value(row.get("nacionalidad"))
+        condicion_edad_nombre = clean_catalog_value(row.get("men_may"))
+        involucramiento_nombre = clean_catalog_value(row.get("involucramiento"))
+        tipo_ley_nombre = clean_catalog_value(row.get("tipo_ley"))
+        titulo_nombre = clean_catalog_value(row.get("titulo"))
+        capitulo_nombre = clean_catalog_value(row.get("capitulo"))
 
+        if normalize_name(nacionalidad_nombre) == "ignorado":
+            nacionalidad_nombre = ""
+        if normalize_name(condicion_edad_nombre) == "ignorado":
+            condicion_edad_nombre = ""
+        if normalize_name(involucramiento_nombre) == "ignorado":
+            involucramiento_nombre = ""
+        if normalize_name(tipo_ley_nombre) == "ignorado":
+            tipo_ley_nombre = ""
+        if normalize_name(titulo_nombre) == "ignorado":
+            titulo_nombre = ""
+        if normalize_name(capitulo_nombre) == "ignorado":
+            capitulo_nombre = ""
+    
         id_nacionalidad = get_or_create_nacionalidad(repo, nacionalidad_nombre) if nacionalidad_nombre else None
         id_condicion_edad = get_or_create_condicion_edad(repo, condicion_edad_nombre) if condicion_edad_nombre else None
         get_or_create_involucramiento(repo, involucramiento_nombre) if involucramiento_nombre else None

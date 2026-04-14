@@ -257,18 +257,6 @@ C:.
     |           Sentencias del MP por el delito de VCM.xlsx (ya)
     |           SENTENCIAS DEL OJ POR EL DELITO DE VCM 2008-2024.xlsx (ya)
     +---Violencia contra la ninez
-    |   +---conjunto_de_datos_sdem_enti_2022
-    |   |   +---catalogos
-    |   |   |       ambito1.csv
-    |   |   |       ambito2.csv
-    |   |   +---conjunto_de_datos
-    |   |   |       conjunto_de_datos_sdem_enti_2022.csv
-    |   |   +---diccionario_de_datos
-    |   |   |       diccionario_datos_sdem_enti_2022.csv
-    |   |   +---metadatos
-    |   |   |       metadatos_enti_2022.txt
-    |   |   \---modelo_entidad_relacion
-    |   |           modelo_er_enti_2022.jpg
     |   \---Quejas Mineduc
     |           20240719123138C8M6SpIQkU1dO569us4WzmhiEojxPhwf.xlsx (ya)
     +---Violencia estructural
@@ -283,33 +271,15 @@ C:.
                 diccionario-de-variables-violencia-intrafamiliar.xlsx (ya)
 
 
-C:.
-|   Proyecto2_BD1_2026.docx
-\---Violencia
-    +---Violencia contra la ninez
-    |   +---conjunto_de_datos_sdem_enti_2022
-    |   |   +---catalogos
-    |   |   |       ambito1.csv
-    |   |   |       ambito2.csv
-    |   |   +---conjunto_de_datos
-    |   |   |       conjunto_de_datos_sdem_enti_2022.csv
-    |   |   +---diccionario_de_datos
-    |   |   |       diccionario_datos_sdem_enti_2022.csv
-    |   |   +---metadatos
-    |   |   |       metadatos_enti_2022.txt
-    |   |   \---modelo_entidad_relacion
-    |   |           modelo_er_enti_2022.jpg
-    |   \---Quejas Mineduc
-    |           20240719123138C8M6SpIQkU1dO569us4WzmhiEojxPhwf.xlsx (ya)
+
+scraping de:
+            - embarazos
+            - sentencias
+inserts faker
+consultas
+documentar codigo
 
 
-1. Denuncias registradas
-2. Delitos contra la vida (feminicidios)
-3. Hechos delictivos mujer
-4. Evaluaciones INACIF mujer
-5. Atenciones brindadas
-6. Medidas de seguridad
-7. Sentencias (MP + OJ)
-
-
-python -m profiling.profile_source --file "Violencia/Violencia contra la mujer/Sentencias por delito/Sentencias del MP por el delito de VCM.xlsx" --rows 15
+agraviados
+exhumaciones
+necropsias

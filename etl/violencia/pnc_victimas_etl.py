@@ -49,6 +49,53 @@ DIAS_ES = {
     6: "Domingo",
 }
 
+def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
+    repo.execute("""
+        SELECT id
+        FROM departamento
+        WHERE codigo = ?
+    """, ("9999",))
+    row = repo.fetch_one()
+    if row:
+        return row[0]
+
+    repo.execute("""
+        INSERT INTO departamento (codigo, nombre)
+        VALUES (?, ?)
+        RETURNING id
+    """, ("9999", "Ignorado"))
+
+    return repo.fetch_one()[0]
+
+
+def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
+    repo.execute("""
+        SELECT id
+        FROM municipio
+        WHERE codigo = ?
+    """, ("M99999",))
+    row = repo.fetch_one()
+    if row:
+        return row[0]
+
+    id_departamento = get_or_create_departamento_ignorado(repo)
+
+    repo.execute("""
+        INSERT INTO municipio (codigo, nombre, id_departamento)
+        VALUES (?, ?, ?)
+        RETURNING id
+    """, ("M99999", "Ignorado", id_departamento))
+
+    return repo.fetch_one()[0]
+
+def clean_catalog_value(value: str, default: str = "Ignorado") -> str:
+    text = normalize_text(value)
+    norm = normalize_name(text)
+
+    if norm in {"", "sd", "s/d", "ignorado", "ignorada", "999", "9999", "99", "nan"}:
+        return default
+
+    return text
 
 def normalize_text(value) -> str:
     if value is None or pd.isna(value):
@@ -207,6 +254,8 @@ def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int)
 
 
 def build_municipio_name_map(repo: FirebirdRepository) -> dict:
+    get_or_create_municipio_ignorado(repo)
+
     repo.execute("""
         SELECT id, nombre
         FROM municipio
@@ -229,8 +278,12 @@ def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     elif nombre_norm in {"mujer", "mujeres", "femenino"}:
         codigo = "M"
         nombre_final = "Mujer"
+    elif nombre_norm in {"", "ignorado", "ignorada", "sd", "s/d", "999", "9"}:
+        codigo = "9"
+        nombre_final = "Ignorado"
     else:
-        raise ValueError(f"Sexo no reconocido: {nombre}")
+        codigo = "9"
+        nombre_final = "Ignorado"
 
     repo.execute("""
         SELECT id
@@ -248,6 +301,19 @@ def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     """, (codigo, nombre_final))
 
     return repo.fetch_one()[0]
+
+def clean_edad(value):
+    edad = safe_int(value)
+    if edad is None:
+        return None
+
+    if edad in {99, 999, 9999}:
+        return None
+
+    if edad < 0 or edad > 120:
+        return None
+
+    return edad
 
 
 def get_or_create_area_geografica(repo: FirebirdRepository, nombre: str):
@@ -507,42 +573,54 @@ def run_pnc_victimas_etl(
             continue
 
         municipio_nombre = normalize_text(row.get("municipio_ocu"))
+        municipio_norm = normalize_name(municipio_nombre)
+
         municipio_id = municipio_name_map.get(normalize_name(municipio_nombre))
-        if not municipio_id:
+        if municipio_norm in {"", "ignorado", "ignorada", "9999", "999", "sd", "s/d"}:
             skipped_missing_municipio += 1
-            continue
-
+            municipio_id = municipio_name_map.get("ignorado")
+        else:
+            municipio_id = municipio_name_map.get(municipio_norm)
+            if not municipio_id:
+                skipped_missing_municipio += 1
+                municipio_id = municipio_name_map.get("ignorado")
+                
+        if not municipio_id:
+            municipio_id = get_or_create_municipio_ignorado(repo)       
+         
         sexo_nombre = normalize_text(row.get("sexo_per"))
-        if not sexo_nombre or normalize_name(sexo_nombre) in {"ignorada", "ignorado"}:
+        if normalize_name(sexo_nombre) in {"", "ignorada", "ignorado", "sd", "s/d", "999", "9"}:
             skipped_missing_sexo += 1
-            continue
+            sexo_nombre = "Ignorado"
 
-        try:
-            sexo_id = get_or_create_sexo(repo, sexo_nombre)
-        except Exception:
-            skipped_missing_sexo += 1
-            continue
+        sexo_id = get_or_create_sexo(repo, sexo_nombre)
 
-        edad = safe_int(row.get("edad_per"))
+        edad = clean_edad(row.get("edad_per"))
 
-        grupo_etario_nombre = normalize_text(row.get("edad_quinquenales"))
-        if normalize_name(grupo_etario_nombre) in {"ignorado", "ignorada"}:
+        grupo_etario_nombre = clean_catalog_value(row.get("edad_quinquenales"))
+        if normalize_name(grupo_etario_nombre) == "ignorado":
             grupo_etario_nombre = ""
         grupo_etario_id = get_or_create_grupo_etario(repo, grupo_etario_nombre) if grupo_etario_nombre else None
 
-        delito_nombre = normalize_text(row.get("delito_com"))
-        categoria_delito_nombre = normalize_text(row.get("g_delitos"))
+        delito_nombre = clean_catalog_value(row.get("delito_com"))
+        categoria_delito_nombre = clean_catalog_value(row.get("g_delitos"))
+        if normalize_name(categoria_delito_nombre) == "ignorado":
+            categoria_delito_nombre = None
 
-        if not delito_nombre:
+        if not delito_nombre or normalize_name(delito_nombre) == "ignorado":
             skipped_missing_delito += 1
             continue
 
         delito_id = get_or_create_delito(repo, delito_nombre, categoria_delito_nombre)
-
-        area_geografica_nombre = normalize_text(row.get("area_geografica"))
+        
+        area_geografica_nombre = clean_catalog_value(row.get("area_geografica"))
+        if normalize_name(area_geografica_nombre) == "ignorado":
+            area_geografica_nombre = ""
         area_geografica_id = get_or_create_area_geografica(repo, area_geografica_nombre) if area_geografica_nombre else None
 
-        franja_nombre = normalize_text(row.get("franja_horaria"))
+        franja_nombre = clean_catalog_value(row.get("franja_horaria"))
+        if normalize_name(franja_nombre) == "ignorado":
+            franja_nombre = ""
         franja_id = get_or_create_franja_horaria(repo, franja_nombre) if franja_nombre else None
 
         persona_id = create_persona(repo, sexo_id, edad)

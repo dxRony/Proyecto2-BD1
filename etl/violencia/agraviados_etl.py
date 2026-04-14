@@ -48,6 +48,54 @@ DIAS_ES = {
     6: "Domingo",
 }
 
+def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
+    repo.execute("""
+        SELECT id
+        FROM departamento
+        WHERE codigo = ?
+    """, ("9999",))
+    row = repo.fetch_one()
+    if row:
+        return row[0]
+
+    repo.execute("""
+        INSERT INTO departamento (codigo, nombre)
+        VALUES (?, ?)
+        RETURNING id
+    """, ("9999", "Ignorado"))
+
+    return repo.fetch_one()[0]
+
+
+def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
+    repo.execute("""
+        SELECT id
+        FROM municipio
+        WHERE codigo = ?
+    """, ("M99999",))
+    row = repo.fetch_one()
+    if row:
+        return row[0]
+
+    id_departamento = get_or_create_departamento_ignorado(repo)
+
+    repo.execute("""
+        INSERT INTO municipio (codigo, nombre, id_departamento)
+        VALUES (?, ?, ?)
+        RETURNING id
+    """, ("M99999", "Ignorado", id_departamento))
+
+    return repo.fetch_one()[0]
+
+def clean_catalog_value(value: str, default: str = "Ignorado") -> str:
+    text = normalize_text(value)
+    norm = normalize_name(text)
+
+    if norm in {"", "sd", "s/d", "ignorado", "ignorada", "999", "9999", "99", "nan"}:
+        return default
+
+    return text
+
 def normalize_text(value) -> str:
     if value is None or pd.isna(value):
         return ""

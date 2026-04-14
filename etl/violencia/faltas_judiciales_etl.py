@@ -47,6 +47,78 @@ DIAS_ES = {
     6: "Domingo",
 }
 
+def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
+    repo.execute("""
+        SELECT id
+        FROM departamento
+        WHERE codigo = ?
+    """, ("9999",))
+    row = repo.fetch_one()
+    if row:
+        return row[0]
+
+    repo.execute("""
+        INSERT INTO departamento (codigo, nombre)
+        VALUES (?, ?)
+        RETURNING id
+    """, ("9999", "Ignorado"))
+
+    return repo.fetch_one()[0]
+
+def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
+    repo.execute("""
+        SELECT id
+        FROM municipio
+        WHERE codigo = ?
+    """, ("M99999",))
+    row = repo.fetch_one()
+    if row:
+        return row[0]
+
+    id_departamento = get_or_create_departamento_ignorado(repo)
+
+    repo.execute("""
+        INSERT INTO municipio (codigo, nombre, id_departamento)
+        VALUES (?, ?, ?)
+        RETURNING id
+    """, ("M99999", "Ignorado", id_departamento))
+
+    return repo.fetch_one()[0]
+
+
+def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
+    nombre_norm = normalize_name(nombre)
+
+    if nombre_norm in {"hombre", "hombres", "masculino"}:
+        codigo = "H"
+        nombre_final = "Hombre"
+    elif nombre_norm in {"mujer", "mujeres", "femenino"}:
+        codigo = "M"
+        nombre_final = "Mujer"
+    elif nombre_norm in {"", "ignorado", "ignorada", "sd", "s/d", "999", "9"}:
+        codigo = "9"
+        nombre_final = "Ignorado"
+    else:
+        codigo = "9"
+        nombre_final = "Ignorado"
+
+    repo.execute("""
+        SELECT id
+        FROM sexo
+        WHERE codigo = ?
+    """, (codigo,))
+    row = repo.fetch_one()
+    if row:
+        return row[0]
+
+    repo.execute("""
+        INSERT INTO sexo (codigo, nombre)
+        VALUES (?, ?)
+        RETURNING id
+    """, (codigo, nombre_final))
+
+    return repo.fetch_one()[0]
+
 def normalize_text(value) -> str:
     if value is None or pd.isna(value):
         return ""
@@ -182,6 +254,8 @@ def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int 
     return repo.fetch_one()[0]
 
 def build_municipio_name_map(repo: FirebirdRepository) -> dict:
+    get_or_create_municipio_ignorado(repo)
+
     repo.execute("""
         SELECT id, nombre
         FROM municipio
@@ -193,6 +267,19 @@ def build_municipio_name_map(repo: FirebirdRepository) -> dict:
         result[normalize_name(nombre)] = municipio_id
 
     return result
+
+def clean_edad(value):
+    edad = safe_int(value)
+    if edad is None:
+        return None
+
+    if edad in {99, 999, 9999}:
+        return None
+
+    if edad < 0 or edad > 120:
+        return None
+
+    return edad
 
 def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     nombre_norm = normalize_name(nombre)
@@ -461,6 +548,15 @@ def insert_falta_judicial(
         id_fuente_dato
     ))
 
+def clean_catalog_value(value: str, default: str = "Ignorado") -> str:
+    text = normalize_text(value)
+    norm = normalize_name(text)
+
+    if norm in {"", "sd", "s/d", "ignorado", "ignorada", "999", "9999", "99"}:
+        return default
+
+    return text
+
 def parse_mes_to_int(mes_texto: str):
     mes_norm = normalize_name(mes_texto)
     return MESES_ES.get(mes_norm)
@@ -507,10 +603,19 @@ def run_faltas_judiciales_etl(
             continue
 
         municipio_nombre = normalize_text(row.get("municipio_boleta"))
-        municipio_id = municipio_name_map.get(normalize_name(municipio_nombre))
-        if not municipio_id:
+        municipio_norm = normalize_name(municipio_nombre)
+
+        if municipio_norm in {"", "ignorado", "ignorada", "9999", "999", "sd", "s/d"}:
             skipped_missing_municipio += 1
-            continue
+            municipio_id = municipio_name_map.get("ignorado")
+        else:
+            municipio_id = municipio_name_map.get(municipio_norm)
+            if not municipio_id:
+                skipped_missing_municipio += 1
+                municipio_id = municipio_name_map.get("ignorado")
+
+            if not municipio_id:
+                municipio_id = get_or_create_municipio_ignorado(repo)
 
         tipo_falta_nombre = normalize_text(row.get("tipo_falta"))
         if not tipo_falta_nombre:
@@ -519,20 +624,21 @@ def run_faltas_judiciales_etl(
         id_tipo_falta = get_or_create_tipo_falta(repo, tipo_falta_nombre)
 
         sexo_nombre = normalize_text(row.get("sexo"))
-        if not sexo_nombre:
+        if normalize_name(sexo_nombre) in {"", "sd", "s/d", "999", "9"}:
             skipped_missing_sexo += 1
-            continue
+            sexo_nombre = "Ignorado"
+
         id_sexo = get_or_create_sexo(repo, sexo_nombre)
 
-        edad = safe_int(row.get("edad"))
+        edad = clean_edad(row.get("edad"))
 
-        grupo_etnico_nombre = normalize_text(row.get("grupo_etnico"))
-        alfabetismo_nombre = normalize_text(row.get("condicion_alfabetismo"))
-        escolaridad_nombre = normalize_text(row.get("escolaridad"))
-        area_geografica_nombre = normalize_text(row.get("area_geografica"))
-        estado_ebriedad_nombre = normalize_text(row.get("estado_ebriedad"))
-        grupo_etario_nombre = normalize_text(row.get("grupo_etario_texto"))
-        ocupacion_nombre = normalize_text(row.get("ocupacion"))
+        grupo_etnico_nombre = clean_catalog_value(row.get("grupo_etnico"))
+        alfabetismo_nombre = clean_catalog_value(row.get("condicion_alfabetismo"))
+        escolaridad_nombre = clean_catalog_value(row.get("escolaridad"))
+        area_geografica_nombre = clean_catalog_value(row.get("area_geografica"))
+        estado_ebriedad_nombre = clean_catalog_value(row.get("estado_ebriedad"))
+        grupo_etario_nombre = clean_catalog_value(row.get("grupo_etario_texto"))
+        ocupacion_nombre = clean_catalog_value(row.get("ocupacion"))
 
         id_grupo_etnico = get_or_create_grupo_etnico(repo, grupo_etnico_nombre) if grupo_etnico_nombre else None
         id_condicion_alfabetismo = get_or_create_condicion_alfabetismo(repo, alfabetismo_nombre) if alfabetismo_nombre else None
