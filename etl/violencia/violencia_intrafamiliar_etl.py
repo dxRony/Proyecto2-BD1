@@ -1,4 +1,5 @@
 from datetime import date
+import hashlib
 from pathlib import Path
 import unicodedata
 import pandas as pd
@@ -42,6 +43,83 @@ def safe_int(value):
     except Exception:
         return None
 
+def get_departamento_id_from_municipio(repo: FirebirdRepository, id_municipio: int) -> int | None:
+    repo.execute("""
+        SELECT id_departamento
+        FROM municipio
+        WHERE id = ?
+    """, (id_municipio,))
+    row = repo.fetch_one()
+    return row[0] if row else None
+
+def insert_proceso_judicial(
+    repo: FirebirdRepository,
+    id_hecho_delictivo: int,
+    id_departamento: int,
+    id_delito: int
+) -> int:
+    repo.execute("""
+        INSERT INTO proceso_judicial (
+            id_hecho_delictivo,
+            id_departamento,
+            id_delito
+        )
+        VALUES (?, ?, ?)
+        RETURNING id
+    """, (
+        id_hecho_delictivo,
+        id_departamento,
+        id_delito
+    ))
+    return repo.fetch_one()[0]
+
+def insert_sentencia(
+    repo: FirebirdRepository,
+    id_proceso_judicial: int,
+    id_tipo_fallo: int
+) -> int:
+    repo.execute("""
+        INSERT INTO sentencia (
+            id_proceso_judicial,
+            id_tipo_fallo
+        )
+        VALUES (?, ?)
+        RETURNING id
+    """, (
+        id_proceso_judicial,
+        id_tipo_fallo
+    ))
+    return repo.fetch_one()[0]
+
+def get_or_create_tipo_fallo(repo: FirebirdRepository, codigo: str, nombre: str) -> int:
+    repo.execute("""
+        SELECT id
+        FROM tipo_fallo
+        WHERE UPPER(codigo) = UPPER(?)
+    """, (codigo,))
+    row = repo.fetch_one()
+    if row:
+        return row[0]
+
+    repo.execute("""
+        INSERT INTO tipo_fallo (codigo, nombre)
+        VALUES (?, ?)
+        RETURNING id
+    """, (codigo, nombre))
+    return repo.fetch_one()[0]
+
+def build_unique_code(text: str, prefix: str = "", max_len: int = 10) -> str:
+    base = normalize_name(text).replace(" ", "_").upper()
+    digest = hashlib.md5(base.encode("utf-8")).hexdigest()[:3].upper()
+
+    prefix = prefix.upper() if prefix else "X"
+    reserve = len(prefix) + 1 + len(digest)
+    cut_len = max_len - reserve
+    if cut_len < 1:
+        cut_len = 1
+
+    trimmed = base[:cut_len]
+    return f"{prefix}{trimmed}_{digest}"
 
 def load_dictionary_maps(dict_path: str) -> dict:
     df = pd.read_excel(dict_path, sheet_name="DICCIONARIO.2023VIF", header=3)
@@ -441,6 +519,31 @@ def run_violencia_intrafamiliar_etl(
             id_hecho_delictivo=hecho_id,
             id_fuente_dato=fuente_id
         )
+        
+        
+        departamento_id = get_departamento_id_from_municipio(repo, municipio_id)
+
+        if departamento_id:
+            # ejemplo académico: no todos los casos llegan a proceso
+            if inserted % 3 == 0:
+                proceso_id = insert_proceso_judicial(
+                    repo=repo,
+                    id_hecho_delictivo=hecho_id,
+                    id_departamento=departamento_id,
+                    id_delito=delito_id
+                )
+
+                # alternar tipos de fallo para que haya variedad
+                if inserted % 5 == 0:
+                    tipo_fallo_id = get_or_create_tipo_fallo(repo, "ABS", "ABSOLUTORIA")
+                else:
+                    tipo_fallo_id = get_or_create_tipo_fallo(repo, "COND", "CONDENATORIA")
+
+                insert_sentencia(
+                    repo=repo,
+                    id_proceso_judicial=proceso_id,
+                    id_tipo_fallo=tipo_fallo_id
+                )
 
         inserted += 1
 
