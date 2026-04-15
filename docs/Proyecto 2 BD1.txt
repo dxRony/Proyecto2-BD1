@@ -272,9 +272,6 @@ C:.
 
 
 TODO:
-scraping de:
-            - embarazos
-            - sentencias
 inserts faker
 consultas
-documentar codigo
+documentar codigo (etls)

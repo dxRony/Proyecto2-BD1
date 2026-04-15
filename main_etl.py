@@ -27,6 +27,9 @@ from etl.violencia.atenciones_brindadas_etl import run_atenciones_victima_mujer_
 from etl.violencia.medidas_seguridad_etl import run_medidas_seguridad_etl
 from etl.violencia.sentencias_mp_mujer_etl import run_sentencias_mp_vcm_etl
 from etl.violencia.sentencias_oj_mujer_etl import run_sentencias_oj_vcm_etl
+from etl.salud.scraping_embarazos_etl import run_embarazos_etl
+from etl.violencia.scraping_sentencias_etl import run_sentencias_detalladas_etl
+
 
 #enfermedades transmitidas por vectores
 VECTOR_MODULES = {
@@ -200,6 +203,14 @@ SENTENCIAS_OJ_VCM_MODULES = {
     ),
 }
 
+EMBARAZOS_MODULES = {
+    "embarazos": "Embarazos adolescentes OSAR"
+}
+
+SENTENCIAS_DETALLADAS_MODULES = {
+    "sentencias_detalladas": "Sentencias detalladas observatorio MP"
+}
+
 def run_catalogs(repo: FirebirdRepository):
     print("Cargando catálogos base")
 
@@ -337,6 +348,15 @@ def run_module(module_name: str, repo: FirebirdRepository):
     if module_name in SENTENCIAS_OJ_VCM_MODULES:
         file_path, dataset_name = SENTENCIAS_OJ_VCM_MODULES[module_name]
         run_sentencias_oj_vcm_etl(repo, file_path, dataset_name)
+        return
+    
+    if module_name in EMBARAZOS_MODULES:
+        run_embarazos_etl(repo, EMBARAZOS_MODULES[module_name])
+        return
+    
+    if module_name in SENTENCIAS_DETALLADAS_MODULES:
+        dataset_name = SENTENCIAS_DETALLADAS_MODULES[module_name]
+        run_sentencias_detalladas_etl(repo, dataset_name)
         return
     
     print("Modulo no reconocido")
