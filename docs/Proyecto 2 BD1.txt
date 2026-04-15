@@ -107,36 +107,37 @@ Además cada una de las carpetas tiene una llamada “DICCIONARIO” o parecido,
 utilizan para que usted lo pueda adaptar a lo que necesite.
 
 - Consultas propuestas:
-Cantidad de homicidios registrados por año y departamento.
-Número de denuncias por violencia contra la mujer por municipio.
-Top 5 tipos de hechos delictivos más frecuentes en los últimos 5 años.
-Sentencias dictadas por tipo de delito y año.
-Promedio de edad de las víctimas de violencia intrafamiliar.
-Distribución de embarazos adolescentes (menores de 19 años) por región.
-Cantidad de casos de violencia infantil relacionados con trabajo infantil.
-Porcentaje de denuncias por discriminación según etnia.
-Comparativa entre nivel de escolaridad y tipo de falta judicial cometida.
-Número de necropsias realizadas por año.
-Tasa de denuncias de violencia estructural procesadas vs. no procesadas.
-Relación entre el tipo de empleo y la ocurrencia de hechos delictivos.
-Casos de violencia contra la mujer con sentencia firme.
-Idiomas hablados por víctimas de discriminación.
-Número de personas por hogar en casos con denuncias de violencia intrafamiliar.
-Tasa de denuncias de violencia infantil en población escolarizada vs. no escolarizada.
-Casos de trabajo infantil por sector económico (agricultura, industria, etc.).
-Relación entre edad y tipo de violencia sufrida (infantil, intrafamiliar, estructural, etc.).
-Casos de desnutrición aguda por departamento, municipio y año.
-Comparativa de casos de retardo en el desarrollo entre grupos etarios y sexo por región.
-Departamentos con mayor incidencia de enfermedades crónicas según diagnóstico CIE-10.
-Evolución anual de casos de dengue y dengue grave por departamento del 2012 al 2024.
-Distribución de casos de malaria por grupo etario y sexo a nivel municipal.
-Relación entre casos de desnutrición aguda infantil y registros de violencia intrafamiliar por departamento.
-Top 5 municipios con mayor cantidad de casos de Chagas, Zika y Chikungunya combinados.
-Comparativa entre enfermedades transmitidas por vectores y nivel de urbanización por departamento.
-Tasa de morbilidad materna infantil por año y departamento.
-Correlación entre casos de desnutrición y ocurrencia de hechos delictivos por municipio.
-Comparativa de violencia estructural entre áreas urbanas y rurales.
-Frecuencia de exhumaciones por tipo de delito relacionado.
+1. Cantidad de homicidios registrados por año y departamento.
+2. Número de denuncias por violencia contra la mujer por municipio.
+3. Top 5 tipos de hechos delictivos más frecuentes en los últimos 5 años.
+4. Sentencias dictadas por tipo de delito y año.
+5. Promedio de edad de las víctimas de violencia intrafamiliar.
+6. Distribución de embarazos adolescentes (menores de 19 años) por región.
+7. Cantidad de casos de violencia infantil relacionados con trabajo infantil.
+8. Porcentaje de denuncias por discriminación según etnia.
+9. Comparativa entre nivel de escolaridad y tipo de falta judicial cometida.
+10. Número de necropsias realizadas por año.
+11. Tasa de denuncias de violencia estructural procesadas vs. no procesadas.
+12. Relación entre el tipo de empleo y la ocurrencia de hechos delictivos.
+13. Casos de violencia contra la mujer con sentencia firme.
+14. Idiomas hablados por víctimas de discriminación.
+15. Número de personas por hogar en casos con denuncias de violencia intrafamiliar.
+16. Tasa de denuncias de violencia infantil en población escolarizada vs. no escolarizada.
+17. Casos de trabajo infantil por sector económico (agricultura, industria, etc.).
+18. Relación entre edad y tipo de violencia sufrida (infantil, intrafamiliar, estructural, etc.).
+19. Casos de desnutrición aguda por departamento, municipio y año.
+20. Comparativa de casos de retardo en el desarrollo entre grupos etarios y sexo por región.
+21. Departamentos con mayor incidencia de enfermedades crónicas según diagnóstico CIE-10.
+22. Evolución anual de casos de dengue y dengue grave por departamento del 2012 al 2024.
+23. Distribución de casos de malaria por grupo etario y sexo a nivel municipal.
+24. Relación entre casos de desnutrición aguda infantil y registros de violencia intrafamiliar por departamento.
+25. Top 5 municipios con mayor cantidad de casos de Chagas, Zika y Chikungunya combinados.
+
+26. Comparativa entre enfermedades transmitidas por vectores y nivel de urbanización por departamento.
+27. Tasa de morbilidad materna infantil por año y departamento.
+28. Correlación entre casos de desnutrición y ocurrencia de hechos delictivos por municipio.
+29. Comparativa de violencia estructural entre áreas urbanas y rurales.
+30. Frecuencia de exhumaciones por tipo de delito relacionado.
 
 - Criterios de evaluación
 Tiempo de inversión (investigación y creación de la base de datos)
@@ -269,7 +270,3 @@ C:.
         \---2024
                 base-de-datos-violencia-intrafamiliar-ano-2024_v3.xlsx (ya)
                 diccionario-de-variables-violencia-intrafamiliar.xlsx (ya)
-
-
-TODO:
-consultas
