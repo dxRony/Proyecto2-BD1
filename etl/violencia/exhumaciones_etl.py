@@ -216,7 +216,7 @@ def insert_exhumacion(
     id_fecha: int,
     id_departamento: int,
     id_fuente_dato: int
-):
+) -> int:
     repo.execute("""
         INSERT INTO exhumacion (
             id_fecha,
@@ -224,11 +224,42 @@ def insert_exhumacion(
             id_fuente_dato
         )
         VALUES (?, ?, ?)
+        RETURNING id
     """, (
         id_fecha,
         id_departamento,
         id_fuente_dato
     ))
+    return repo.fetch_one()[0]
+
+def find_necropsia_for_exhumacion(
+    repo: FirebirdRepository,
+    id_fecha: int,
+    id_departamento: int
+):
+    repo.execute("""
+        SELECT FIRST 1 n.id
+        FROM necropsia n
+        JOIN municipio m
+            ON m.id = n.id_municipio
+        WHERE n.id_fecha_ingreso = ?
+          AND m.id_departamento = ?
+          AND n.id_exhumacion IS NULL
+        ORDER BY n.id
+    """, (id_fecha, id_departamento))
+    row = repo.fetch_one()
+    return row[0] if row else None
+
+def link_necropsia_to_exhumacion(
+    repo: FirebirdRepository,
+    id_necropsia: int,
+    id_exhumacion: int
+):
+    repo.execute("""
+        UPDATE necropsia
+        SET id_exhumacion = ?
+        WHERE id = ?
+    """, (id_exhumacion, id_necropsia))
 
 def run_exhumaciones_etl(
     repo: FirebirdRepository,
@@ -280,12 +311,25 @@ def run_exhumaciones_etl(
         if not departamento_id:
             departamento_id = get_or_create_departamento_ignorado(repo)
 
-        insert_exhumacion(
+        exhumacion_id = insert_exhumacion(
             repo=repo,
             id_fecha=fecha_id,
             id_departamento=departamento_id,
             id_fuente_dato=fuente_id
         )
+
+        necropsia_id = find_necropsia_for_exhumacion(
+            repo=repo,
+            id_fecha=fecha_id,
+            id_departamento=departamento_id
+        )
+
+        if necropsia_id:
+            link_necropsia_to_exhumacion(
+                repo=repo,
+                id_necropsia=necropsia_id,
+                id_exhumacion=exhumacion_id
+            )
 
         inserted += 1
 
