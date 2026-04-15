@@ -29,6 +29,9 @@ from etl.violencia.sentencias_mp_mujer_etl import run_sentencias_mp_vcm_etl
 from etl.violencia.sentencias_oj_mujer_etl import run_sentencias_oj_vcm_etl
 from etl.salud.scraping_embarazos_etl import run_embarazos_etl
 from etl.violencia.scraping_sentencias_etl import run_sentencias_detalladas_etl
+from etl.ficticios.faker_personas_etl import run_faker_personas_etl
+from etl.ficticios.faker_hechos_etl import run_faker_hechos_etl
+from etl.ficticios.faker_trabajo_infantil_etl import run_faker_trabajo_infantil_etl
 
 
 #enfermedades transmitidas por vectores
@@ -73,7 +76,7 @@ CRONICAS_MODULES = {
     "cronicas_2023": "Salud/Enfermedades_Cronicas_2020-2024/mec-2023-departamento-municipio.csv",
     "cronicas_2024": "Salud/Enfermedades_Cronicas_2020-2024/mec-2024-departamento-municipio.csv",
 }
-
+#violencia intrafamiliar
 VIOLENCIA_INTRAFAMILIAR_MODULES = {
     "violencia_intrafamiliar_2023": (
         "Violencia/Violencia intrafamiliar/2023/2024052300200h2NuX0RKNUd61gZu7ox4PQXgDUDgLC9Y.xlsx",
@@ -86,127 +89,127 @@ VIOLENCIA_INTRAFAMILIAR_MODULES = {
         "Violencia intrafamiliar 2024"
     ),
 }
-
+#faltas judiciales
 FALTAS_JUDICIALES_MODULES = {
     "faltas_judiciales": (
         "Violencia/Faltas judiciales/20240524231759eHmz6DmFKboNQ5Y3OlqNkbi9izmXULaP.xlsx",
         "Faltas judiciales"
     ),
 }
-
+#victias pnc
 PNC_VICTIMAS_MODULES = {
     "pnc_victimas": (
         "Violencia/Hechos-Delicitivos/PNC -Victimas/20240528163848NcFYbAN6bA92ZKRG7mLINYvyZoVmXEDA.xlsx",
         "PNC Víctimas"
     ),
 }
-
+#detenidos pnc
 PNC_DETENIDOS_MODULES = {
     "pnc_detenidos": (
         "Violencia/Hechos-Delicitivos/PNC - Detenciados/20240528163735e7G5K5EZOlGPCBiH4ROtQRgfm5sTifW1.xlsx",
         "PNC Detenidos"
     ),
 }
-
+#sentenciados oj
 OJ_SENTENCIADOS_MODULES = {
     "oj_sentenciados": (
         "Violencia/Hechos-Delicitivos/Organismo judical - Sentenciados/20240528163614FaXwFKh8NYNiFivgBo98JEbaVMRUhaFG.xlsx",
         "OJ Sentenciados"
     ),
 }
-
+#necropsias
 NECROPSIAS_MODULES = {
     "necropsias": (
         "Violencia/Hechos-Delicitivos/Necropsias/20240528163210puPW7O9wJalS7I9yToxkpQLgLwNElAny.xlsx",
         "Necropsias"
     ),
 }
-
+#exhumaciones
 EXHUMACIONES_MODULES = {
     "exhumaciones": (
         "Violencia/Hechos-Delicitivos/Exhumaciones/20240528163020xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx",
         "Exhumaciones"
     ),
 }
-
+#agraviados
 AGRAVIADOS_MODULES = {
     "agraviados": (
         "Violencia/Hechos-Delicitivos/Agraviados/20240528163342pWf6BcBWj8taVS3Q3mRKxgDsvwPejgH8.xlsx",
         "Agraviados MP"
     ),
 }
-
+#sindicatos
 SINDICATOS_MODULES = {
     "sindicatos": (
         "Violencia/Hechos-Delicitivos/Sindicatos/20240528163458VEdqlo5oBmhO5cvKTQhYRYj2D05gxCla.xlsx",
         "Sindicatos MP"
     ),
 }
-
+#evaluaciones medicas inacif
 INACIF_MODULES = {
     "inacif": "Violencia/Hechos-Delicitivos/Evaluacion Medicos - INACIF/20240528162820xWnoL8XOFWtEdaj6FS3AtmzgpEXyVyB8.xlsx"
 }
-
+#denuncias violencia contra la mujer
 VIOLENCIA_MUJER_MODULES = {
     "denuncias_vcm": (
         "Violencia/Violencia contra la mujer/Denuncias registradas/Denuncias del MP por el delito de VCM.xlsx",
         "Denuncias del MP por el delito de VCM"
     ),
 }
-
+#delitos contra la vida mujer
 DELITOS_VIDA_MUJER_MODULES = {
     "delitos_vida_mujer": (
         "Violencia/Violencia contra la mujer/Delictos contra la vida y feminicidios/Delitos contra la vida de las mujeres y femicidios del MP.xlsx",
         "Delitos contra la vida de las mujeres y femicidios del MP"
     ),
 }
-
+#hechos delictivos mujer
 HECHOS_DELICTIVOS_MUJER_MODULES = {
     "hechos_delictivos_mujer": (
         "Violencia/Violencia contra la mujer/Hechos delicttivos/Hechos delictivos contra mujeres de 2008 al 2024.xlsx",
         "Hechos delictivos contra mujeres de 2008 al 2024"
     ),
 }
-
+#evaluaciones inacif mujer
 EVALUACIONES_INACIF_MUJER_MODULES = {
     "evaluaciones_inacif_mujer": (
         "Violencia/Violencia contra la mujer/Evaluaciones Inacif/Evaluciones realizadas por el INACIF 2008 al 2024.xlsx",
         "Evaluaciones realizadas por el INACIF 2008 al 2024"
     ),
 }
-
+#atencion brindada mujer
 ATENCIONES_VICTIMA_MUJER_MODULES = {
     "atenciones_victima_mujer": (
         "Violencia/Violencia contra la mujer/Atencion brindada/Atenciones brindades por el Instituto de la Víctima 2020-2023(1).xlsx",
         "Atenciones brindades por el Instituto de la Víctima 2020-2023"
     ),
 }
-
+#medidas seguridad
 MEDIDAS_SEGURIDAD_MODULES = {
     "medidas_seguridad": (
         "Violencia/Violencia contra la mujer/Medidas de seguridad/Medidas de Seguridad 2012-2024.xlsx",
         "Medidas de Seguridad"
     ),
 }
-
+#sentencias mp por vcm
 SENTENCIAS_MP_VCM_MODULES = {
     "sentencias_mp_vcm": (
         "Violencia/Violencia contra la mujer/Sentencias por delito/Sentencias del MP por el delito de VCM.xlsx",
         "Sentencias del MP por el delito de VCM"
     ),
 }
-
+#sentencias oj por vcm
 SENTENCIAS_OJ_VCM_MODULES = {
     "sentencias_oj_vcm": (
         "Violencia/Violencia contra la mujer/Sentencias por delito/SENTENCIAS DEL OJ POR EL DELITO DE VCM 2008-2024.xlsx",
         "SENTENCIAS DEL OJ POR EL DELITO DE VCM 2008-2024"
     ),
 }
-
+#scraping embarazos
 EMBARAZOS_MODULES = {
     "embarazos": "Embarazos adolescentes OSAR"
 }
-
+#scraping sentencias
 SENTENCIAS_DETALLADAS_MODULES = {
     "sentencias_detalladas": "Sentencias detalladas observatorio MP"
 }
@@ -359,14 +362,26 @@ def run_module(module_name: str, repo: FirebirdRepository):
         run_sentencias_detalladas_etl(repo, dataset_name)
         return
     
+    if module_name == "faker_personas":
+        run_faker_personas_etl(repo, 1500, 1500, 1500)
+        return
+    
+    if module_name == "faker_hechos":
+        run_faker_hechos_etl(repo)
+        return
+    
+    if module_name == "faker_trabajo_infantil":
+        run_faker_trabajo_infantil_etl(repo, 450)
+        return
+    
     print("Modulo no reconocido")
 
 def main():
     parser = argparse.ArgumentParser(description="ETL Proyecto BD1")
     parser.add_argument("--test-connection", action="store_true")
-    parser.add_argument("--catalogs", action="store_true")
+    #parser.add_argument("--catalogs", action="store_true")
     parser.add_argument("--module", type=str)
-    parser.add_argument("--verbose", action="store_true")
+    #parser.add_argument("--verbose", action="store_true")
 
     args = parser.parse_args()
 
@@ -378,8 +393,8 @@ def main():
     repo = FirebirdRepository(conn)
 
     try:
-        if args.catalogs:
-            run_catalogs(repo)
+        #if args.catalogs:
+         #   run_catalogs(repo)
 
         if args.module:
             run_module(args.module, repo)

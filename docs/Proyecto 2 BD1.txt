@@ -272,6 +272,4 @@ C:.
 
 
 TODO:
-inserts faker
 consultas
-documentar codigo (etls)

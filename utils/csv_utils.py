@@ -10,7 +10,7 @@ def read_csv_file(
     normalize_headers: bool = True
 ) -> pd.DataFrame:
     """
-    Lee un archivo CSV y retorna un DataFrame.
+    lee un archivo CSV y retorna un dataframe
     """
     df = pd.read_csv(file_path, sep=sep, encoding=encoding)
 
@@ -27,7 +27,7 @@ def preview_csv(
     rows: int = 10
 ) -> pd.DataFrame:
     """
-    Lee y retorna una vista previa del CSV.
+    lee y retorna una vista previa del CSV
     """
     df = read_csv_file(file_path, sep=sep, encoding=encoding)
     return df.head(rows)
