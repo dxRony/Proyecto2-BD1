@@ -61,9 +61,32 @@ def pick_escolaridad_for_minor(repo: FirebirdRepository, edad: int):
 
     return random.choice(rows)[0]
 
+def seed_sector_economico(repo: FirebirdRepository):
+    sectores_base = [
+        "Agricultura",
+        "Industria",
+        "Comercio",
+        "Servicios",
+        "Trabajo doméstico"
+    ]
+
+    for nombre in sectores_base:
+        repo.execute("""
+            SELECT id
+            FROM sector_economico
+            WHERE LOWER(nombre) = LOWER(?)
+        """, (nombre,))
+        row = repo.fetch_one()
+
+        if not row:
+            repo.execute("""
+                INSERT INTO sector_economico (nombre)
+                VALUES (?)
+            """, (nombre,))
 
 def run_faker_trabajo_infantil_etl(repo: FirebirdRepository, total: int = 450):
     print("Iniciando ETL faker de trabajo infantil")
+    seed_sector_economico(repo)
 
     menores = get_menores(repo)
     if not menores:
