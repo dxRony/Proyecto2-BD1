@@ -475,6 +475,60 @@ def get_or_create_involucramiento(repo: FirebirdRepository, nombre: str = "Falle
     """, (codigo, nombre))
     return repo.fetch_one()[0]
 
+def get_or_create_causa_muerte(repo: FirebirdRepository, nombre: str) -> int:
+    repo.execute("""
+        SELECT id
+        FROM causa_muerte
+        WHERE LOWER(nombre) = LOWER(?)
+    """, (nombre,))
+    row = repo.fetch_one()
+    if row:
+        return row[0]
+
+    codigo = build_unique_code(nombre, prefix="M", max_len=10)
+
+    repo.execute("""
+        INSERT INTO causa_muerte (codigo, nombre)
+        VALUES (?, ?)
+        RETURNING id
+    """, (codigo, nombre))
+    return repo.fetch_one()[0]
+
+def insert_necropsia(
+    repo: FirebirdRepository,
+    id_persona: int,
+    id_fecha_ingreso: int,
+    id_municipio: int,
+    id_causa_muerte: int | None,
+    id_condicion_edad: int | None,
+    id_fuente_dato: int,
+    id_hecho_delictivo: int | None = None,
+    id_exhumacion: int | None = None
+) -> int:
+    repo.execute("""
+        INSERT INTO necropsia (
+            id_persona,
+            id_fecha_ingreso,
+            id_municipio,
+            id_causa_muerte,
+            id_condicion_edad,
+            id_fuente_dato,
+            id_hecho_delictivo,
+            id_exhumacion
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        RETURNING id
+    """, (
+        id_persona,
+        id_fecha_ingreso,
+        id_municipio,
+        id_causa_muerte,
+        id_condicion_edad,
+        id_fuente_dato,
+        id_hecho_delictivo,
+        id_exhumacion
+    ))
+    return repo.fetch_one()[0]
 
 def insert_involucramiento_hecho(
     repo: FirebirdRepository,
@@ -566,6 +620,8 @@ def run_necropsias_etl(
             skipped_missing_causa += 1
             continue
 
+        causa_muerte_id = get_or_create_causa_muerte(repo, causa_muerte)
+        
         edad = clean_edad(row.get("edad_per"))
 
         grupo_etario_nombre = clean_catalog_value(row.get("edad_quinquenales"))
@@ -589,6 +645,18 @@ def run_necropsias_etl(
             id_fecha=fecha_id,
             id_municipio=municipio_id,
             id_delito=delito_id
+        )
+        
+        insert_necropsia(
+        repo=repo,
+        id_persona=persona_id,
+        id_fecha_ingreso=fecha_id,
+        id_municipio=municipio_id,
+        id_causa_muerte=causa_muerte_id,
+        id_condicion_edad=condicion_edad_id,
+        id_fuente_dato=fuente_id,
+        id_hecho_delictivo=hecho_id,
+        id_exhumacion=None
         )
 
         insert_involucramiento_hecho(
