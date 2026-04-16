@@ -7,6 +7,7 @@ import pandas as pd
 
 from repositories.firebird_repository import FirebirdRepository
 
+# diccionarios para normalizacion de meses y dias en español
 MESES_ES = {
     "enero": 1,
     "febrero": 2,
@@ -22,7 +23,6 @@ MESES_ES = {
     "noviembre": 11,
     "diciembre": 12,
 }
-
 NOMBRES_MESES_ES = {
     1: "Enero",
     2: "Febrero",
@@ -37,7 +37,6 @@ NOMBRES_MESES_ES = {
     11: "Noviembre",
     12: "Diciembre",
 }
-
 DIAS_ES = {
     0: "Lunes",
     1: "Martes",
@@ -48,13 +47,13 @@ DIAS_ES = {
     6: "Domingo",
 }
 
-
+#metodo para normalizar texto eliminando espacios
 def normalize_text(value) -> str:
     if value is None or pd.isna(value):
         return ""
     return str(value).strip()
 
-
+#metodo para normalizar texto eliminando acentos, caracteres especiales y convirtiendo a minusculas
 def normalize_name(text) -> str:
     if text is None or pd.isna(text):
         return ""
@@ -65,7 +64,7 @@ def normalize_name(text) -> str:
     text = " ".join(text.split())
     return text
 
-
+#metodo para convertir a entero de forma segura, devolviendo None si no se puede convertir o si el valor es considerado "ignorado"
 def safe_int(value):
     if value is None or pd.isna(value):
         return None
@@ -77,7 +76,7 @@ def safe_int(value):
     except Exception:
         return None
 
-
+#metodoa para generar codigo unico basado en el texto
 def build_unique_code(text: str, prefix: str = "", max_len: int = 10) -> str:
     base = normalize_name(text).replace(" ", "_").upper()
     digest = hashlib.md5(base.encode("utf-8")).hexdigest()[:3].upper()
@@ -92,7 +91,7 @@ def build_unique_code(text: str, prefix: str = "", max_len: int = 10) -> str:
     trimmed = base[:cut_len]
     return f"{prefix}{trimmed}_{digest}"
 
-
+#metodo para renombrar las columnas del dataframe a nombres canónicos esperados, basándose en el orden de las columnas
 def canonicalize_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
     expected_columns = [
         "num_corre",
@@ -131,11 +130,11 @@ def canonicalize_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
 
     return df.rename(columns=rename_map)
 
-
+#metodo para parsear el nombre del mes en español a su numero correspondiente
 def parse_mes_to_int(mes_texto: str):
     return MESES_ES.get(normalize_name(mes_texto))
 
-
+#metodo para obtener o crear una fuente de dati
 def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> int:
     repo.execute("""
         SELECT id
@@ -156,7 +155,7 @@ def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> in
     """, ("MP", dataset_name, "Excel"))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear una fecha, devolviendo su id
 def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int):
     fecha_str = f"{anio:04d}-{mes:02d}-{dia:02d}"
 
@@ -185,7 +184,7 @@ def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int)
     ))
     return repo.fetch_one()[0]
 
-
+#metodo para construir un mapa de nombres normalizados de municipios a sus ids, usando tanto el nombre solo como el nombre combinado con el id del departamento, asegurando que exista el municipio "Ignorado"
 def build_municipio_name_map(repo: FirebirdRepository) -> dict:
     get_or_create_municipio_ignorado(repo)
 
@@ -200,7 +199,7 @@ def build_municipio_name_map(repo: FirebirdRepository) -> dict:
         result[normalize_name(nombre)] = municipio_id
     return result
 
-
+#metodo para obtener o crear sexo, retornando el id
 def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     nombre_norm = normalize_name(nombre)
 
@@ -233,6 +232,7 @@ def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     """, (codigo, nombre_final))
     return repo.fetch_one()[0]
 
+#metodo para obtener o crear un departamento "Ignorado" con codigo "9999"
 def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -250,7 +250,7 @@ def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
     """, ("9999", "Ignorado"))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear un municipio "Ignorado" con codigo "M99999" asociado al departamento "Ignorado"
 def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -270,7 +270,7 @@ def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
     """, ("M99999", "Ignorado", id_departamento))
     return repo.fetch_one()[0]
 
-
+#metodo para crear estado_conyugal, retornando el id
 def get_or_create_estado_conyugal(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -293,7 +293,7 @@ def get_or_create_estado_conyugal(repo: FirebirdRepository, nombre: str):
     """, (codigo, nombre))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear grupo etario, retornando el id
 def get_or_create_grupo_etario(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -316,7 +316,7 @@ def get_or_create_grupo_etario(repo: FirebirdRepository, nombre: str):
     """, (codigo, nombre, None, None, "Sindicatos"))
     return repo.fetch_one()[0]
 
-
+#metodo para parsear un rango de franja horaria en formato "HH:MM a HH:MM", devolviendo hora_inicio y hora_fin, o None
 def parse_franja_range(nombre: str):
     nombre = normalize_text(nombre)
     if not nombre:
@@ -336,7 +336,7 @@ def parse_franja_range(nombre: str):
 
     return None, None
 
-
+#metodo para parsear un rango de franja horaria en formato "HH:MM a HH:MM", devolviendo hora_inicio y hora_fin, o None
 def get_or_create_franja_horaria(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -367,7 +367,7 @@ def get_or_create_franja_horaria(repo: FirebirdRepository, nombre: str):
     """, (codigo, nombre, hora_inicio, hora_fin))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear categoria_delito, retornando el id
 def get_or_create_categoria_delito(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -405,7 +405,7 @@ def get_or_create_categoria_delito(repo: FirebirdRepository, nombre: str):
 
     raise ValueError(f"No se pudo generar código único para categoría delito: {nombre}")
 
-
+#metodo para obtener o crear tipo de delito, retornando el id
 def get_or_create_delito(repo: FirebirdRepository, nombre: str, categoria_nombre: str | None):
     repo.execute("""
         SELECT id
@@ -441,7 +441,7 @@ def get_or_create_delito(repo: FirebirdRepository, nombre: str, categoria_nombre
 
     raise ValueError(f"No se pudo generar código único para delito: {nombre}")
 
-
+#metodo para crear una persona, devolviendo su id
 def create_persona(repo: FirebirdRepository, id_sexo: int, edad: int | None = None) -> int:
     repo.execute("""
         INSERT INTO persona (id_sexo, edad)
@@ -450,7 +450,7 @@ def create_persona(repo: FirebirdRepository, id_sexo: int, edad: int | None = No
     """, (id_sexo, edad))
     return repo.fetch_one()[0]
 
-
+#metodo para crear un detalle persona
 def get_or_create_detalle_persona(
     repo: FirebirdRepository,
     id_persona: int,
@@ -486,7 +486,7 @@ def get_or_create_detalle_persona(
         None
     ))
 
-
+#metodo para crear un hecho_delictivo, devolviendo su id
 def create_hecho_delictivo(
     repo: FirebirdRepository,
     id_fecha: int,
@@ -515,7 +515,7 @@ def create_hecho_delictivo(
     ))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear involucramiento, retornando el id
 def get_or_create_involucramiento(repo: FirebirdRepository, nombre: str = "Sindicado") -> int:
     repo.execute("""
         SELECT id
@@ -535,7 +535,7 @@ def get_or_create_involucramiento(repo: FirebirdRepository, nombre: str = "Sindi
     """, (codigo, nombre))
     return repo.fetch_one()[0]
 
-
+#metodo para crear involucramiento, retornando el id
 def insert_involucramiento_hecho(
     repo: FirebirdRepository,
     id_persona: int,
@@ -561,7 +561,7 @@ def insert_involucramiento_hecho(
         id_fuente_dato
     ))
 
-
+#ejecutor etl
 def run_sindicatos_etl(
     repo: FirebirdRepository,
     file_path: str,
@@ -571,10 +571,10 @@ def run_sindicatos_etl(
         raise FileNotFoundError(f"No existe el archivo: {file_path}")
 
     print(f"Procesando archivo: {file_path}")
-
+    # Cargar el archivo Excel y normalizar columnas
     df = pd.read_excel(file_path, sheet_name="Sheet1", header=0)
     df = canonicalize_dataframe_columns(df)
-
+    #obteniendo llaves foraneas necesarias para las inserciones
     fuente_id = get_or_create_fuente_dato(repo, dataset_name)
     municipio_name_map = build_municipio_name_map(repo)
     involucramiento_id = get_or_create_involucramiento(repo, "Sindicado")
@@ -584,7 +584,7 @@ def run_sindicatos_etl(
     skipped_missing_municipio = 0
     skipped_missing_sexo = 0
     skipped_missing_delito = 0
-
+    #recorriendo cada elemento en el df para insertar registros
     for _, row in df.iterrows():
         anio = safe_int(row.get("anio_denuncia"))
         mes = parse_mes_to_int(row.get("mes_denuncia"))
@@ -593,7 +593,6 @@ def run_sindicatos_etl(
         if anio is None or mes is None or dia is None:
             skipped_missing_fecha += 1
             continue
-
         try:
             fecha_id = get_or_create_fecha(repo, anio, mes, dia)
         except Exception:
@@ -612,7 +611,6 @@ def run_sindicatos_etl(
         if normalize_name(sexo_nombre) not in {"hombre", "mujer"}:
             skipped_missing_sexo += 1
             sexo_nombre = "Ignorado"
-
         try:
             sexo_id = get_or_create_sexo(repo, sexo_nombre)
         except Exception:
@@ -637,7 +635,6 @@ def run_sindicatos_etl(
         if not delito_nombre:
             skipped_missing_delito += 1
             continue
-
         delito_id = get_or_create_delito(repo, delito_nombre, categoria_delito_nombre)
 
         franja_nombre = normalize_text(row.get("g_hora_denuncia"))

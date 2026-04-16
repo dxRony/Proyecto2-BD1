@@ -5,10 +5,10 @@ from repositories.firebird_repository import FirebirdRepository
 from utils.csv_utils import read_csv_file
 from utils.normalizers import normalize_text, safe_int
 
-
+#ruta del archivo a procesar
 FILE_PATH = "Salud/Desnutricion/morbilidad-retardo-desarrollo-departamento-municipio-2012-2024.csv"
 
-
+#metodo apra obtener o crear fuente de dato
 def get_or_create_fuente_dato(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -32,7 +32,7 @@ def get_or_create_fuente_dato(repo: FirebirdRepository) -> int:
     repo.commit()
     return new_id
 
-
+#metodo para obtener o crear tipo de indicador de salud
 def get_or_create_tipo_indicador_salud(repo: FirebirdRepository, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -53,7 +53,7 @@ def get_or_create_tipo_indicador_salud(repo: FirebirdRepository, nombre: str) ->
     repo.commit()
     return new_id
 
-
+#metodo para obtener o crear enfermedad
 def get_or_create_enfermedad(repo: FirebirdRepository, nombre: str, tipo: str) -> int:
     repo.execute("""
         SELECT id
@@ -75,7 +75,7 @@ def get_or_create_enfermedad(repo: FirebirdRepository, nombre: str, tipo: str) -
     repo.commit()
     return new_id
 
-
+#metodo para obtener o crear departamento
 def get_or_create_departamento(repo: FirebirdRepository, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -103,7 +103,7 @@ def get_or_create_departamento(repo: FirebirdRepository, nombre: str) -> int:
     repo.commit()
     return new_id
 
-
+#metodo para obtener o crear municipio
 def get_or_create_municipio(repo: FirebirdRepository, nombre: str, id_departamento: int) -> int:
     repo.execute("""
         SELECT id
@@ -136,7 +136,7 @@ def get_or_create_municipio(repo: FirebirdRepository, nombre: str, id_departamen
     repo.commit()
     return new_id
 
-
+#metodo para obtener o crear grupo etario
 def get_or_create_grupo_etario(repo: FirebirdRepository, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -164,7 +164,7 @@ def get_or_create_grupo_etario(repo: FirebirdRepository, nombre: str) -> int:
     repo.commit()
     return new_id
 
-
+#metodo para obtener o crear sexo
 def get_or_create_sexo(repo: FirebirdRepository, codigo: str, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -186,7 +186,7 @@ def get_or_create_sexo(repo: FirebirdRepository, codigo: str, nombre: str) -> in
     repo.commit()
     return new_id
 
-
+#metodo para obtener o crear fecha
 def get_or_create_fecha(repo: FirebirdRepository, anio: int) -> int:
     repo.execute("""
         SELECT id
@@ -208,7 +208,7 @@ def get_or_create_fecha(repo: FirebirdRepository, anio: int) -> int:
     repo.commit()
     return new_id
 
-
+#funcion para normalizar sexo
 def normalize_sexo(value: str) -> tuple[str, str]:
     val = normalize_text(value)
     if val == "m":
@@ -217,7 +217,7 @@ def normalize_sexo(value: str) -> tuple[str, str]:
         return "F", "Femenino"
     return "ND", "No definido"
 
-
+#metodo para construir el dataframe limpio a partir del csv
 def build_dataframe(file_path: str) -> pd.DataFrame:
     df = read_csv_file(
     file_path=file_path,
@@ -244,18 +244,15 @@ def build_dataframe(file_path: str) -> pd.DataFrame:
 
     df["anio"] = df["anio"].apply(safe_int)
     df["cantidad"] = df["cantidad"].apply(safe_int)
-
     df["departamento"] = df["departamento"].astype(str).str.strip().str.title()
     df["municipio"] = df["municipio"].astype(str).str.strip().str.title()
     df["grupo_etario"] = df["grupo_etario"].astype(str).str.strip()
     df["sexo"] = df["sexo"].astype(str).str.strip().str.upper()
-
     df = df.dropna(subset=["anio", "cantidad"])
     df = df[df["cantidad"] > 0]
-
     return df
 
-
+#metodo para insertar registro de salud
 def insert_registro_salud(
     repo: FirebirdRepository,
     id_tipo_indicador_salud: int,
@@ -293,26 +290,26 @@ def insert_registro_salud(
         id_fuente_dato
     ))
 
-
+#ejecutor etl
 def run_retardo_desarrollo_etl(repo: FirebirdRepository):
     if not Path(FILE_PATH).exists():
         raise FileNotFoundError(f"No existe el archivo: {FILE_PATH}")
 
     print(f"Procesando archivo: {FILE_PATH}")
-
+    #construir dataframe limpio
     df = build_dataframe(FILE_PATH)
 
     print("Vista previa del DataFrame limpio:")
     print(df.head(10))
     print(f"Total filas a procesar: {len(df)}")
-
+    #crear entidades relacionadas
     fuente_id = get_or_create_fuente_dato(repo)
     tipo_indicador_id = get_or_create_tipo_indicador_salud(repo, "Retardo en el desarrollo")
     enfermedad_id = get_or_create_enfermedad(repo, "Retardo en el desarrollo", "Nutricional")
 
     inserted = 0
     skipped = 0
-
+    #recorrer filas del dataframe para insertar registros de salud
     for _, row in df.iterrows():
         try:
             anio = int(row["anio"])

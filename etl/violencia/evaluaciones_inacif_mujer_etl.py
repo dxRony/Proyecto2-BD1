@@ -8,7 +8,7 @@ import pandas as pd
 
 from repositories.firebird_repository import FirebirdRepository
 
-
+# diccionarios para normalizacion de meses y dias en español
 NOMBRES_MESES_ES = {
     1: "Enero",
     2: "Febrero",
@@ -23,7 +23,6 @@ NOMBRES_MESES_ES = {
     11: "Noviembre",
     12: "Diciembre",
 }
-
 DIAS_ES = {
     0: "Lunes",
     1: "Martes",
@@ -34,13 +33,13 @@ DIAS_ES = {
     6: "Domingo",
 }
 
-
+#metodo para normalizar texto eliminando espacios
 def normalize_text(value) -> str:
     if value is None or pd.isna(value):
         return ""
     return str(value).strip()
 
-
+#metodo para normalizar texto eliminando acentos, caracteres especiales y convirtiendo a minusculas
 def normalize_name(text) -> str:
     if text is None or pd.isna(text):
         return ""
@@ -50,7 +49,7 @@ def normalize_name(text) -> str:
     text = " ".join(text.split())
     return text
 
-
+#metodo para convertir a entero de forma segura, devolviendo None si no se puede convertir o si el valor es considerado "ignorado"
 def safe_int(value):
     if value is None or pd.isna(value):
         return None
@@ -62,7 +61,7 @@ def safe_int(value):
     except Exception:
         return None
 
-
+#metodoa para generar codigo unico basado en el texto
 def build_unique_code(text: str, prefix: str = "", max_len: int = 10) -> str:
     base = normalize_name(text).replace(" ", "_").upper()
     digest = hashlib.md5(base.encode("utf-8")).hexdigest()[:3].upper()
@@ -77,7 +76,7 @@ def build_unique_code(text: str, prefix: str = "", max_len: int = 10) -> str:
     trimmed = base[:cut_len]
     return f"{prefix}{trimmed}_{digest}"
 
-
+#metodo para renombrar las columnas del dataframe a nombres canónicos esperados, basándose en el orden de las columnas
 def canonicalize_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
     expected_columns = [
         "fecha",
@@ -105,7 +104,7 @@ def canonicalize_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
 
     return df.rename(columns=rename_map)
 
-
+# metodo para limpiar y normalizar valores de catalogos "ignorado"
 def clean_catalog_value(value: str, default: str = "Ignorado") -> str:
     text = normalize_text(value)
     norm = normalize_name(text)
@@ -128,7 +127,7 @@ def clean_catalog_value(value: str, default: str = "Ignorado") -> str:
 
     return text
 
-
+#metodo para parsear edad en años, devolviendo un entero o None si no se puede parsear o si el valor es considerado "ignorado"
 def parse_edad_years(value):
     text = normalize_text(value)
     if not text:
@@ -151,7 +150,7 @@ def parse_edad_years(value):
 
     return edad
 
-
+#metodo para obtener o crear una fuente de dati
 def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> int:
     repo.execute("""
         SELECT id
@@ -172,7 +171,7 @@ def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> in
     """, ("INACIF", dataset_name, "Excel"))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear una fecha, devolviendo su id
 def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int):
     fecha_str = f"{anio:04d}-{mes:02d}-{dia:02d}"
 
@@ -201,7 +200,7 @@ def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int)
     ))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear sexo, retornando el id
 def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     nombre_norm = normalize_name(nombre)
 
@@ -231,7 +230,7 @@ def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     """, (codigo, nombre_final))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear un departamento "Ignorado" con codigo "9999"
 def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -249,7 +248,7 @@ def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
     """, ("9999", "Ignorado"))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear un municipio "Ignorado" con codigo "M99999" asociado al departamento "Ignorado"
 def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -269,7 +268,7 @@ def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
     """, ("M99999", "Ignorado", id_departamento))
     return repo.fetch_one()[0]
 
-
+#metodo para construir un mapa de nombres normalizados de departamentos a sus ids, asegurando que exista el departamento "Ignorado"
 def build_departamento_name_map(repo: FirebirdRepository) -> dict:
     get_or_create_departamento_ignorado(repo)
 
@@ -284,7 +283,7 @@ def build_departamento_name_map(repo: FirebirdRepository) -> dict:
         result[normalize_name(nombre)] = departamento_id
     return result
 
-
+#metodo para construir un mapa de nombres normalizados de municipios a sus ids, usando tanto el nombre solo como el nombre combinado con el id del departamento, asegurando que exista el municipio "Ignorado"
 def build_municipio_name_map(repo: FirebirdRepository) -> dict:
     get_or_create_municipio_ignorado(repo)
 
@@ -305,7 +304,7 @@ def build_municipio_name_map(repo: FirebirdRepository) -> dict:
 
     return result
 
-
+#metodo para obtener o crear grupo etario, retornando el id
 def get_or_create_grupo_etario(repo: FirebirdRepository, nombre: str):
     nombre = clean_catalog_value(nombre, "Ignorado")
 
@@ -327,7 +326,7 @@ def get_or_create_grupo_etario(repo: FirebirdRepository, nombre: str):
     """, (codigo, nombre, None, None, "Evaluaciones INACIF Mujer"))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear grupo orientacion, retornando el id
 def get_or_create_orientacion(repo: FirebirdRepository, nombre: str):
     nombre = clean_catalog_value(nombre, "Ignorado")
 
@@ -347,7 +346,7 @@ def get_or_create_orientacion(repo: FirebirdRepository, nombre: str):
     """, (nombre,))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear clasificacion de evaluacion, retornando el id
 def get_or_create_clasificacion_evaluacion(repo: FirebirdRepository, nombre: str):
     nombre = clean_catalog_value(nombre, "Ignorado")
 
@@ -369,7 +368,7 @@ def get_or_create_clasificacion_evaluacion(repo: FirebirdRepository, nombre: str
     """, (codigo, nombre))
     return repo.fetch_one()[0]
 
-
+#metodo para crear una persona, devolviendo su id
 def create_persona(repo: FirebirdRepository, id_sexo: int, edad: int | None = None) -> int:
     repo.execute("""
         INSERT INTO persona (id_sexo, edad)
@@ -378,7 +377,7 @@ def create_persona(repo: FirebirdRepository, id_sexo: int, edad: int | None = No
     """, (id_sexo, edad))
     return repo.fetch_one()[0]
 
-
+#metodo para insertar una evaluacion medica asociada a una persona, con los datos de fecha, municipio, clasificacion de evaluacion, orientacion sexual, grupo etario y fuente de dato
 def insert_evaluacion_medica(
     repo: FirebirdRepository,
     id_persona: int,
@@ -414,7 +413,7 @@ def insert_evaluacion_medica(
         None
     ))
 
-
+#metodo para construir un dataframe limpio y normalizado a partir del dataframe original, haciendo transformaciones necesarias para fecha, catalogos, edad y valor
 def build_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
@@ -433,7 +432,7 @@ def build_clean_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-
+#ejecutor etl
 def run_evaluaciones_inacif_mujer_etl(
     repo: FirebirdRepository,
     file_path: str,
@@ -443,11 +442,11 @@ def run_evaluaciones_inacif_mujer_etl(
         raise FileNotFoundError(f"No existe el archivo: {file_path}")
 
     print(f"Procesando archivo: {file_path}")
-
+    # Cargar datos desde Excel, normalizar columnas y construir un dataframe limpio
     df = pd.read_excel(file_path, sheet_name="Evaluciones 2008-2024", header=0)
     df = canonicalize_dataframe_columns(df)
     df = build_clean_dataframe(df)
-
+    #obteiend llaves foraneas necesarias para las tablas
     fuente_id = get_or_create_fuente_dato(repo, dataset_name)
     departamento_name_map = build_departamento_name_map(repo)
     municipio_name_map = build_municipio_name_map(repo)
@@ -458,7 +457,7 @@ def run_evaluaciones_inacif_mujer_etl(
     skipped_missing_departamento = 0
     skipped_missing_municipio = 0
     skipped_missing_clasificacion = 0
-
+    #recorriendo filas del dataframe para insertar datos en la base de datos
     for _, row in df.iterrows():
         fecha = row.get("fecha")
         if pd.isna(fecha):
@@ -477,7 +476,6 @@ def run_evaluaciones_inacif_mujer_etl(
 
         departamento_nombre = clean_catalog_value(row.get("departamento"), "Ignorado")
         departamento_id = departamento_name_map.get(normalize_name(departamento_nombre))
-
         if not departamento_id:
             skipped_missing_departamento += 1
             departamento_id = departamento_name_map.get("ignorado")
@@ -488,14 +486,11 @@ def run_evaluaciones_inacif_mujer_etl(
         municipio_nombre = clean_catalog_value(row.get("municipio"), "Ignorado")
         municipio_key_full = f"{normalize_name(municipio_nombre)}|{departamento_id}"
         municipio_id = municipio_name_map.get(municipio_key_full)
-
         if not municipio_id:
             municipio_id = municipio_name_map.get(normalize_name(municipio_nombre))
-
         if not municipio_id:
             skipped_missing_municipio += 1
             municipio_id = municipio_name_map.get("ignorado")
-
         if not municipio_id:
             municipio_id = get_or_create_municipio_ignorado(repo)
 
@@ -528,7 +523,7 @@ def run_evaluaciones_inacif_mujer_etl(
 
         if cantidad <= 0:
             continue
-
+        #insertando una evaluacion medica por cada persona evaluada, según la cantidad indicada en la columna "valor"
         for _ in range(cantidad):
             persona_id = create_persona(repo, sexo_id, edad)
 
@@ -542,9 +537,7 @@ def run_evaluaciones_inacif_mujer_etl(
                 id_grupo_etario=grupo_etario_id,
                 id_fuente_dato=fuente_id,
             )
-
             inserted += 1
-
             if inserted % 1000 == 0:
                 print(f"Procesados correctamente: {inserted}")
 

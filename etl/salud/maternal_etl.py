@@ -5,7 +5,7 @@ from repositories.firebird_repository import FirebirdRepository
 from utils.csv_utils import read_csv_file
 from utils.normalizers import normalize_text, safe_int
 
-
+#metodo para normalizar columnas, sexo, grupo etario
 def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
     normalized_cols = []
 
@@ -25,7 +25,7 @@ def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
 
     return df.rename(columns=rename_map)
 
-
+#metodo para normalizar grupo etario
 def normalize_grupo_etario(value: str) -> str:
     if not value:
         return None
@@ -33,7 +33,7 @@ def normalize_grupo_etario(value: str) -> str:
     val = val.replace("  ", " ").strip()
     return val
 
-
+#metodo para construir el dataframe limpio a partir del csv
 def build_dataframe(file_path: str) -> pd.DataFrame:
     if not Path(file_path).exists():
         raise FileNotFoundError(file_path)
@@ -62,21 +62,18 @@ def build_dataframe(file_path: str) -> pd.DataFrame:
         raise ValueError(f"Faltan columnas requeridas: {missing}. Columnas actuales: {list(df.columns)}")
 
     df = df[required].copy()
-
     df["anio"] = df["anio"].apply(safe_int)
     df["cantidad"] = df["cantidad"].apply(safe_int)
-
     df["departamento"] = df["departamento"].astype(str).str.strip().str.title()
     df["municipio"] = df["municipio"].astype(str).str.strip().str.title()
     df["cie10"] = df["cie10"].astype(str).str.strip()
     df["diagnostico"] = df["diagnostico"].astype(str).str.strip()
     df["grupo_etario"] = df["grupo_etario"].apply(normalize_grupo_etario)
-
     df = df.dropna(subset=["anio", "cantidad"])
     df = df[df["cantidad"] > 0]
-
     return df
 
+#metodo para obtener o crear diagnostico
 def get_or_create_diagnostico(repo: FirebirdRepository, codigo: str, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -98,12 +95,13 @@ def get_or_create_diagnostico(repo: FirebirdRepository, codigo: str, nombre: str
     repo.commit()
     return new_id
 
+#ejecutor etl
 def run_maternal_etl(repo: FirebirdRepository, file_path: str):
     df = build_dataframe(file_path)
 
     print(df.head())
     print(f"Total filas: {len(df)}")
-
+    #creando entidades relacionadas
     fuente_id = repo.get_or_create_fuente_dato("MSPAS", "Morbilidad materna", "CSV")
     tipo_indicador_id = repo.get_or_create_tipo_indicador_salud("Morbilidad materna")
 
@@ -136,7 +134,6 @@ def run_maternal_etl(repo: FirebirdRepository, file_path: str):
             )
 
             inserted += 1
-
             if inserted % 1000 == 0:
                 repo.commit()
                 print(f"Insertados: {inserted}")

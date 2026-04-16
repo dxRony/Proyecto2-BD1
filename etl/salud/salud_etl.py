@@ -5,8 +5,7 @@ from repositories.firebird_repository import FirebirdRepository
 from utils.csv_utils import read_csv_file
 from utils.normalizers import normalize_text, safe_int
 
-# normalizers
-
+#metodo para normalizar columnas, sexo, grupo etario
 def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
     df.columns = (
         df.columns
@@ -22,12 +21,10 @@ def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
         "grupo_etario_": "grupo_etario",
         "grupo": "grupo_etario"
     }
-
     df = df.rename(columns=rename_map)
-
     return df
 
-
+#metodo para normalizar sexo
 def normalize_sexo(value: str) -> tuple[str, str]:
     val = normalize_text(value)
 
@@ -38,7 +35,7 @@ def normalize_sexo(value: str) -> tuple[str, str]:
 
     return "ND", "No definido"
 
-
+#metodo para normalizar grupo etario
 def normalize_grupo_etario(value: str) -> str:
     if not value:
         return None
@@ -50,7 +47,7 @@ def normalize_grupo_etario(value: str) -> str:
     return val.strip()
 
 
-#procesador etl
+#metodo para construir el dataframe limpio a partir del csv
 def build_dataframe(file_path: str) -> pd.DataFrame:
     df = read_csv_file(
         file_path=file_path,
@@ -68,10 +65,8 @@ def build_dataframe(file_path: str) -> pd.DataFrame:
         raise ValueError(f"Faltan columnas: {missing} -> {list(df.columns)}")
 
     df = df[required].copy()
-
     df["anio"] = df["anio"].apply(safe_int)
     df["cantidad"] = df["cantidad"].apply(safe_int)
-
     df["departamento"] = df["departamento"].astype(str).str.strip().str.title()
     df["municipio"] = df["municipio"].astype(str).str.strip().str.title()
     df["grupo_etario"] = df["grupo_etario"].apply(normalize_grupo_etario)
@@ -79,13 +74,9 @@ def build_dataframe(file_path: str) -> pd.DataFrame:
 
     df = df.dropna(subset=["anio", "cantidad"])
     df = df[df["cantidad"] > 0]
-
     return df
 
-
-
 # ejecutor elt
-
 def run_salud_etl(
     repo: FirebirdRepository,
     file_path: str,
@@ -101,13 +92,13 @@ def run_salud_etl(
 
     print(df.head())
     print(f"Total filas: {len(df)}")
-
+    #crear entidades relacionadas
     fuente_id = repo.get_or_create_fuente_dato("MSPAS", enfermedad_nombre, "CSV")
     tipo_indicador_id = repo.get_or_create_tipo_indicador_salud(tipo_indicador_nombre)
     enfermedad_id = repo.get_or_create_enfermedad(enfermedad_nombre, "Vectores")
 
     inserted = 0
-
+    #recorrer filas del dataframe para insertar registros de salud
     for _, row in df.iterrows():
         try:
             sexo_codigo, sexo_nombre = normalize_sexo(row["sexo"])
@@ -129,16 +120,14 @@ def run_salud_etl(
                 int(row["cantidad"]),
                 fuente_id
             )
-
             inserted += 1
 
             if inserted % 1000 == 0:
                 repo.commit()
-                print(f"Insertados: {inserted}")
+                print(f"insertados hasta el momento: {inserted}")
 
         except Exception as e:
             print("Error:", e)
 
     repo.commit()
-
-    print(f"FINAL → Insertados: {inserted}")
+    print(f"insertados: {inserted}")

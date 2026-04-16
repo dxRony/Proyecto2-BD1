@@ -2,12 +2,12 @@ import random
 
 from repositories.firebird_repository import FirebirdRepository
 
-
+#metodo para obtener ids de una tabla
 def get_ids(repo: FirebirdRepository, table: str):
     repo.execute(f"SELECT id FROM {table}")
     return [r[0] for r in repo.fetch_all()]
 
-
+#metodo para obtener menores de edad con su edad
 def get_menores(repo: FirebirdRepository):
     repo.execute("""
         SELECT p.id, p.edad
@@ -17,7 +17,7 @@ def get_menores(repo: FirebirdRepository):
     """)
     return repo.fetch_all()
 
-
+#metodo para elegir grupo etario compatible con la edad
 def pick_grupo_etario_for_minor(repo: FirebirdRepository, edad: int):
     repo.execute("""
         SELECT id, edad_min, edad_max
@@ -37,7 +37,7 @@ def pick_grupo_etario_for_minor(repo: FirebirdRepository, edad: int):
 
     return None
 
-
+#metodo para elegir escolaridad compatible con la edad
 def pick_escolaridad_for_minor(repo: FirebirdRepository, edad: int):
     repo.execute("SELECT id, nombre FROM escolaridad")
     rows = repo.fetch_all()
@@ -61,6 +61,7 @@ def pick_escolaridad_for_minor(repo: FirebirdRepository, edad: int):
 
     return random.choice(rows)[0]
 
+#metodo para obtener o crear un sector economico, retornando su id
 def seed_sector_economico(repo: FirebirdRepository):
     sectores_base = [
         "Agricultura",
@@ -84,15 +85,16 @@ def seed_sector_economico(repo: FirebirdRepository):
                 VALUES (?)
             """, (nombre,))
 
+#ejecutor etl
 def run_faker_trabajo_infantil_etl(repo: FirebirdRepository, total: int = 450):
     print("Iniciando ETL faker de trabajo infantil")
     seed_sector_economico(repo)
-
+    #obteniendo menores de edad disponibles
     menores = get_menores(repo)
     if not menores:
         print("No hay personas menores de edad disponibles")
         return
-
+    #obteniendo ids de tablas relacionadas
     areas = get_ids(repo, "area_geografica")
     fuentes = get_ids(repo, "fuente_dato")
     sectores = get_ids(repo, "sector_economico")
@@ -102,7 +104,7 @@ def run_faker_trabajo_infantil_etl(repo: FirebirdRepository, total: int = 450):
     apoyos = get_ids(repo, "apoyo_hogar")
 
     insertados = 0
-
+    #insertando registros de trabajo infantil
     for _ in range(total):
         persona_id, edad = random.choice(menores)
 

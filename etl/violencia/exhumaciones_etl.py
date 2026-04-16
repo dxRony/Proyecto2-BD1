@@ -4,6 +4,7 @@ import pandas as pd
 
 from repositories.firebird_repository import FirebirdRepository
 
+# diccionarios para normalizacion de meses y dias en español
 MESES_ES = {
     "enero": 1,
     "febrero": 2,
@@ -19,7 +20,6 @@ MESES_ES = {
     "noviembre": 11,
     "diciembre": 12,
 }
-
 NOMBRES_MESES_ES = {
     1: "Enero",
     2: "Febrero",
@@ -34,7 +34,6 @@ NOMBRES_MESES_ES = {
     11: "Noviembre",
     12: "Diciembre",
 }
-
 DIAS_ES = {
     0: "Lunes",
     1: "Martes",
@@ -45,6 +44,7 @@ DIAS_ES = {
     6: "Domingo",
 }
 
+#metodo para obtener o crear un departamento "Ignorado" con codigo "9999"
 def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -63,7 +63,7 @@ def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
 
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear un municipio "Ignorado" con codigo "M99999" asociado al departamento "Ignorado"
 def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -84,6 +84,7 @@ def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
 
     return repo.fetch_one()[0]
 
+# metodo para limpiar y normalizar valores de catalogos "ignorado"
 def clean_catalog_value(value: str, default: str = "Ignorado") -> str:
     text = normalize_text(value)
     norm = normalize_name(text)
@@ -92,12 +93,14 @@ def clean_catalog_value(value: str, default: str = "Ignorado") -> str:
         return default
 
     return text
+
+#metodo para normalizar texto eliminando espacios
 def normalize_text(value) -> str:
     if value is None or pd.isna(value):
         return ""
     return str(value).strip()
 
-
+#metodo para normalizar texto eliminando acentos, caracteres especiales y convirtiendo a minusculas
 def normalize_name(text) -> str:
     if text is None or pd.isna(text):
         return ""
@@ -114,6 +117,7 @@ def normalize_name(text) -> str:
     text = " ".join(text.split())
     return text
 
+#metodo para convertir a entero de forma segura, devolviendo None si no se puede convertir o si el valor es considerado "ignorado"
 def safe_int(value):
     if value is None or pd.isna(value):
         return None
@@ -125,6 +129,7 @@ def safe_int(value):
     except Exception:
         return None
 
+#metodo para renombrar las columnas del dataframe a nombres canónicos esperados, basándose en el orden de las columnas
 def canonicalize_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
     expected_columns = [
         "num_corre",
@@ -146,9 +151,11 @@ def canonicalize_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
 
     return df.rename(columns=rename_map)
 
+#metodo para convertir el nombre del mes en español a su numero correspondiente, devolviendo None si no se puede convertir 
 def parse_mes_to_int(mes_texto: str):
     return MESES_ES.get(normalize_name(mes_texto))
 
+#metodo para obtener o crear una fuente de dati
 def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> int:
     repo.execute("""
         SELECT id
@@ -169,6 +176,7 @@ def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> in
     """, ("INACIF", dataset_name, "Excel"))
     return repo.fetch_one()[0]
 
+#metodo para obtener o crear una fecha, devolviendo su id
 def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int):
     fecha_str = f"{anio:04d}-{mes:02d}-{dia:02d}"
 
@@ -197,6 +205,8 @@ def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int)
     ))
     return repo.fetch_one()[0]
 
+
+#metodo para construir un mapa de nombres normalizados de departamentos a sus ids, asegurando que exista el departamento "Ignorado"
 def build_departamento_name_map(repo: FirebirdRepository) -> dict:
     get_or_create_departamento_ignorado(repo)
 
@@ -211,6 +221,7 @@ def build_departamento_name_map(repo: FirebirdRepository) -> dict:
         result[normalize_name(nombre)] = dep_id
     return result
 
+#metodo para insertar un registro de exhumacion y devolver su id
 def insert_exhumacion(
     repo: FirebirdRepository,
     id_fecha: int,
@@ -232,6 +243,7 @@ def insert_exhumacion(
     ))
     return repo.fetch_one()[0]
 
+#metodo para encontrar un registro de necropsia que coincida con la fecha y departamento de la exhumacion, que no tenga ya una exhumacion asociada, devolviendo su id
 def find_necropsia_for_exhumacion(
     repo: FirebirdRepository,
     id_fecha: int,
@@ -250,6 +262,7 @@ def find_necropsia_for_exhumacion(
     row = repo.fetch_one()
     return row[0] if row else None
 
+#metodo para actualizar un registro de necropsia con el id de la exhumacion asociada
 def link_necropsia_to_exhumacion(
     repo: FirebirdRepository,
     id_necropsia: int,
@@ -261,6 +274,7 @@ def link_necropsia_to_exhumacion(
         WHERE id = ?
     """, (id_exhumacion, id_necropsia))
 
+#ejecutor etl
 def run_exhumaciones_etl(
     repo: FirebirdRepository,
     file_path: str,
@@ -270,17 +284,17 @@ def run_exhumaciones_etl(
         raise FileNotFoundError(f"No existe el archivo: {file_path}")
 
     print(f"Procesando archivo: {file_path}")
-
+    #obtenemos el dataframe y renombramos las columnas a nombres canónicos esperados
     df = pd.read_excel(file_path, sheet_name="Sheet1", header=0)
     df = canonicalize_dataframe_columns(df)
-
+    #obtenemos o creamos la fuente de dato y el mapa de departamentos
     fuente_id = get_or_create_fuente_dato(repo, dataset_name)
     dep_map = build_departamento_name_map(repo)
 
     inserted = 0
     skipped_missing_fecha = 0
     skipped_missing_departamento = 0
-
+    #recorremos cada fila del dataframe para procesar los datos y realizar las inserciones correspondientes
     for _, row in df.iterrows():
         anio = safe_int(row.get("anio_ocu"))
         mes = parse_mes_to_int(row.get("mes_ocu"))
@@ -289,7 +303,6 @@ def run_exhumaciones_etl(
         if anio is None or mes is None or dia is None:
             skipped_missing_fecha += 1
             continue
-
         try:
             fecha_id = get_or_create_fecha(repo, anio, mes, dia)
         except Exception:
@@ -298,7 +311,6 @@ def run_exhumaciones_etl(
 
         departamento_nombre = clean_catalog_value(row.get("depto_ocu"))
         departamento_norm = normalize_name(departamento_nombre)
-
         if departamento_norm == "ignorado":
             skipped_missing_departamento += 1
             departamento_id = dep_map.get("ignorado")
@@ -307,23 +319,22 @@ def run_exhumaciones_etl(
             if not departamento_id:
                 skipped_missing_departamento += 1
                 departamento_id = dep_map.get("ignorado")
-
         if not departamento_id:
             departamento_id = get_or_create_departamento_ignorado(repo)
-
+        #insertando la exhumacion y obtenemos su id
         exhumacion_id = insert_exhumacion(
             repo=repo,
             id_fecha=fecha_id,
             id_departamento=departamento_id,
             id_fuente_dato=fuente_id
         )
-
+        #insertando la necropsia y obtenemos su id
         necropsia_id = find_necropsia_for_exhumacion(
             repo=repo,
             id_fecha=fecha_id,
             id_departamento=departamento_id
         )
-
+        #si encontramos una necropsia coincidente, la vinculamos con la exhumacion recién insertada
         if necropsia_id:
             link_necropsia_to_exhumacion(
                 repo=repo,

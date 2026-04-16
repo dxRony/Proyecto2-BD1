@@ -5,10 +5,10 @@ from repositories.firebird_repository import FirebirdRepository
 from utils.csv_utils import read_csv_file
 from utils.normalizers import normalize_text, safe_int
 
-
+#path del archivo a procesar
 FILE_PATH = "Salud/Desnutricion/morbilidad-desnutricion-aguda-departamento-municipio-2012-a-2024.csv"
 
-
+#metodos para obtener o crear registros relacionados (departamento, municipio, grupo etario, sexo, fecha)
 def get_or_create_fuente_dato(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -17,22 +17,21 @@ def get_or_create_fuente_dato(repo: FirebirdRepository) -> int:
           AND LOWER(dataset) = LOWER(?)
           AND LOWER(tipo_fuente) = LOWER(?)
     """, ("MSPAS", "Desnutrición aguda", "CSV"))
-
+    #si se encuentra, se retorna el id
     row = repo.fetch_one()
     if row:
         return row[0]
-
+    #si no se encuentra, se inserta un nuevo registro y se retorna el nuevo id
     repo.execute("""
         INSERT INTO fuente_dato (institucion, dataset, tipo_fuente)
         VALUES (?, ?, ?)
         RETURNING id
     """, ("MSPAS", "Desnutrición aguda", "CSV"))
-
     new_id = repo.fetch_one()[0]
     repo.commit()
     return new_id
 
-
+#metodo para obtener o crear tipo de indicador de salud
 def get_or_create_tipo_indicador_salud(repo: FirebirdRepository, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -53,7 +52,7 @@ def get_or_create_tipo_indicador_salud(repo: FirebirdRepository, nombre: str) ->
     repo.commit()
     return new_id
 
-
+#metodo para obtener o crear enfermedad
 def get_or_create_enfermedad(repo: FirebirdRepository, nombre: str, tipo: str) -> int:
     repo.execute("""
         SELECT id
@@ -75,7 +74,7 @@ def get_or_create_enfermedad(repo: FirebirdRepository, nombre: str, tipo: str) -
     repo.commit()
     return new_id
 
-
+#metodo para obtener o crear departamento
 def get_or_create_departamento(repo: FirebirdRepository, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -103,7 +102,7 @@ def get_or_create_departamento(repo: FirebirdRepository, nombre: str) -> int:
     repo.commit()
     return new_id
 
-
+#metodo para obtener o crear municipio
 def get_or_create_municipio(repo: FirebirdRepository, nombre: str, id_departamento: int) -> int:
     repo.execute("""
         SELECT id
@@ -136,7 +135,7 @@ def get_or_create_municipio(repo: FirebirdRepository, nombre: str, id_departamen
     repo.commit()
     return new_id
 
-
+#metodo para obtener o crear grupo etario
 def get_or_create_grupo_etario(repo: FirebirdRepository, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -164,7 +163,7 @@ def get_or_create_grupo_etario(repo: FirebirdRepository, nombre: str) -> int:
     repo.commit()
     return new_id
 
-
+#metodo para obtener o crear sexo
 def get_or_create_sexo(repo: FirebirdRepository, codigo: str, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -186,7 +185,7 @@ def get_or_create_sexo(repo: FirebirdRepository, codigo: str, nombre: str) -> in
     repo.commit()
     return new_id
 
-
+#metodo para obtener o crear fecha
 def get_or_create_fecha(repo: FirebirdRepository, anio: int) -> int:
     repo.execute("""
         SELECT id
@@ -208,7 +207,7 @@ def get_or_create_fecha(repo: FirebirdRepository, anio: int) -> int:
     repo.commit()
     return new_id
 
-
+#metodo para normalizar sexo
 def normalize_sexo(value: str) -> tuple[str, str]:
     val = normalize_text(value)
     if val == "m":
@@ -217,7 +216,7 @@ def normalize_sexo(value: str) -> tuple[str, str]:
         return "F", "Femenino"
     return "ND", "No definido"
 
-
+#metodo para construir dataframe limpio a partir del csv
 def build_dataframe(file_path: str) -> pd.DataFrame:
     df = read_csv_file(
     file_path=file_path,
@@ -255,7 +254,7 @@ def build_dataframe(file_path: str) -> pd.DataFrame:
 
     return df
 
-
+#metodo para insertar registro de salud
 def insert_registro_salud(
     repo: FirebirdRepository,
     id_tipo_indicador_salud: int,
@@ -293,7 +292,7 @@ def insert_registro_salud(
         id_fuente_dato
     ))
 
-
+# ejecutor elt
 def run_desnutricion_etl(repo: FirebirdRepository):
     if not Path(FILE_PATH).exists():
         raise FileNotFoundError(f"No existe el archivo: {FILE_PATH}")
@@ -302,9 +301,9 @@ def run_desnutricion_etl(repo: FirebirdRepository):
 
     df = build_dataframe(FILE_PATH)
 
-    print("Vista previa del DataFrame limpio:")
+    print("Vista previa del DataFrame \"limpio\":")
     print(df.head(10))
-    print(f"Total filas a procesar: {len(df)}")
+    print(f"filas a procesar: {len(df)}")
 
     fuente_id = get_or_create_fuente_dato(repo)
     tipo_indicador_id = get_or_create_tipo_indicador_salud(repo, "Desnutrición aguda")
@@ -345,11 +344,11 @@ def run_desnutricion_etl(repo: FirebirdRepository):
 
             if inserted % 500 == 0:
                 repo.commit()
-                print(f"Insertados hasta ahora: {inserted}")
+                print(f"insertados hasta ahora: {inserted}")
 
         except Exception as e:
             skipped += 1
-            print(f"Fila omitida por error: {row.to_dict()} -> {e}")
+            print(f"fila omitida por error: {row.to_dict()} -> {e}")
 
     repo.commit()
 

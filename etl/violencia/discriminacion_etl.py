@@ -5,11 +5,11 @@ import pandas as pd
 
 from repositories.firebird_repository import FirebirdRepository
 
-
+#ruta del archivo
 FILE_PATH = "Violencia/Violencia estructural/CASOS DISCRIMINACIÓN 2016-2023.xls"
-
+#hojas a procesar
 SHEETS = ["2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023"]
-
+#diccionarios de normalizacion
 DEPARTAMENTO_ALIASES = {
     "peten": "el peten",
     "quiche": "quiche",
@@ -25,7 +25,6 @@ DEPARTAMENTO_ALIASES = {
     "chimaltenango": "chimaltenango",
     "chiquimula": "chiquimula",
 }
-
 TIPO_DISCRIMINACION_MAP = {
     "etnica": "Étnica",
     "racial": "Racial",
@@ -37,7 +36,6 @@ TIPO_DISCRIMINACION_MAP = {
     "etnica laboral": "Étnica laboral",
     "etnica racial": "Étnica racial",
 }
-
 GRUPO_ETNICO_MAP = {
     "maya": "Maya",
     "garifuna": "Garífuna",
@@ -62,7 +60,6 @@ GRUPO_ETNICO_MAP = {
     "tzutujil": "Tz'utujil",
     "no indica": "No indica",
 }
-
 COMUNIDAD_MAP = {
     "k'iche'": "K'iche'",
     "k´iche´": "K'iche'",
@@ -85,7 +82,7 @@ COMUNIDAD_MAP = {
     "idioma garifuna": "Idioma Garífuna",
     "no indica": "No indica",
 }
-
+#metodo para normalizar texto eliminando espacios
 def normalize_text(text) -> str:
     if text is None or pd.isna(text):
         return ""
@@ -97,6 +94,7 @@ def normalize_text(text) -> str:
     text = " ".join(text.split())
     return text
 
+#metodo para detectar si una celda esta marcada con "1" o "x"
 def is_marked(value) -> bool:
     if value is None or pd.isna(value):
         return False
@@ -104,6 +102,7 @@ def is_marked(value) -> bool:
     val = normalize_text(value)
     return val in {"1", "x"}
 
+#metodo para parsear edad, devolviendo un entero o None si no es posible
 def parse_edad(value):
     if value is None or pd.isna(value):
         return None
@@ -121,6 +120,7 @@ def parse_edad(value):
     except Exception:
         return None
 
+#metodos para parsear sexo segun el formato de cada año, devolviendo "Hombre", "Mujer" o None
 def parse_sexo_old(row) -> str | None:
     """
     Formato 2016-2019:
@@ -136,6 +136,7 @@ def parse_sexo_old(row) -> str | None:
         return "Femenino"
     return None
 
+#metodo para parsear sexo segun el formato de cada año, devolviendo "Hombre", "Mujer" o None
 def parse_sexo_new(row) -> str | None:
     """
     Formato 2020-2023:
@@ -151,6 +152,7 @@ def parse_sexo_new(row) -> str | None:
         return "Hombre"
     return None
 
+#metodo para normalizar departamento, devolviendo el nombre canonico o None si no es valido
 def normalize_departamento(value: str) -> str | None:
     val = normalize_text(value)
 
@@ -160,6 +162,7 @@ def normalize_departamento(value: str) -> str | None:
     val = DEPARTAMENTO_ALIASES.get(val, val)
     return val
 
+#metodo para normalizar tipo de discriminacion, devolviendo el nombre canonico o None si no es valido
 def normalize_tipo_discriminacion(value: str) -> str | None:
     val = normalize_text(value)
 
@@ -191,6 +194,7 @@ def normalize_tipo_discriminacion(value: str) -> str | None:
 
     return str(value).strip()
 
+#metodo para normalizar grupo etnico, devolviendo el nombre canonico o None si no es valido
 def normalize_grupo_etnico(value: str) -> str | None:
     val = normalize_text(value)
 
@@ -199,7 +203,7 @@ def normalize_grupo_etnico(value: str) -> str | None:
 
     return GRUPO_ETNICO_MAP.get(val, str(value).strip())
 
-
+#metodo para normalizar comunidad linguistica, devolviendo el nombre canonico o None si no es valido
 def normalize_comunidad(value: str) -> str | None:
     val = normalize_text(value)
 
@@ -208,9 +212,11 @@ def normalize_comunidad(value: str) -> str | None:
 
     return COMUNIDAD_MAP.get(val, str(value).strip())
 
+#metodos para extraer grupo etnico segun el formato de cada año, devolviendo el nombre canonico o None
 def extract_grupo_etnico_old(row) -> str | None:
     return normalize_grupo_etnico(row.iloc[6])
 
+#metodo para extraer grupo etnico segun el formato de cada año, devolviendo el nombre canonico o None
 def extract_grupo_etnico_new(row) -> str | None:
     maya = row.iloc[4]
     garifuna = row.iloc[5]
@@ -224,6 +230,7 @@ def extract_grupo_etnico_new(row) -> str | None:
         return "Xinka"
     return None
 
+#metodo para obtener o crear la fuente de dato, devolviendo su id
 def get_or_create_fuente_dato(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -245,6 +252,7 @@ def get_or_create_fuente_dato(repo: FirebirdRepository) -> int:
 
     return repo.fetch_one()[0]
 
+#metodo para obtener el id de la fecha dado el año, devolviendo None si no existe
 def get_fecha_id(repo: FirebirdRepository, anio: int):
     repo.execute("""
         SELECT id
@@ -255,6 +263,7 @@ def get_fecha_id(repo: FirebirdRepository, anio: int):
     row = repo.fetch_one()
     return row[0] if row else None
 
+#metodo para construir un mapa de nombres normalizados de departamentos a sus ids, asegurando que exista el departamento "Ignorado"
 def build_departamento_map(repo: FirebirdRepository) -> dict:
     repo.execute("""
         SELECT id, nombre
@@ -268,6 +277,7 @@ def build_departamento_map(repo: FirebirdRepository) -> dict:
 
     return result
 
+#metodo para obtener o crear sexo, retornando el id
 def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     nombre_norm = normalize_text(nombre)
 
@@ -298,6 +308,7 @@ def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     """, (codigo, nombre_canonico))
     return repo.fetch_one()[0]
 
+#metodo para obtener o crear tipo de discriminacion, retornando el id
 def get_or_create_tipo_discriminacion(repo: FirebirdRepository, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -315,7 +326,7 @@ def get_or_create_tipo_discriminacion(repo: FirebirdRepository, nombre: str) -> 
     """, (nombre,))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear grupo etnico, retornando el id
 def get_or_create_grupo_etnico(repo: FirebirdRepository, nombre: str | None):
     if not nombre:
         return None
@@ -336,7 +347,7 @@ def get_or_create_grupo_etnico(repo: FirebirdRepository, nombre: str | None):
     """, (nombre,))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear comunidad linguistica, retornando el id
 def get_or_create_comunidad_linguistica(repo: FirebirdRepository, nombre: str | None):
     if not nombre:
         return None
@@ -357,7 +368,7 @@ def get_or_create_comunidad_linguistica(repo: FirebirdRepository, nombre: str | 
     """, (nombre,))
     return repo.fetch_one()[0]
 
-
+#metodo para crear una persona, devolviendo su id
 def create_persona(repo: FirebirdRepository, id_sexo: int | None, edad: int | None) -> int:
     repo.execute("""
         INSERT INTO persona (id_sexo, edad)
@@ -366,7 +377,7 @@ def create_persona(repo: FirebirdRepository, id_sexo: int | None, edad: int | No
     """, (id_sexo, edad))
     return repo.fetch_one()[0]
 
-
+#metodo para verificar si ya existe un caso de discriminacion con los mismos atributos, para evitar duplicados
 def exists_caso_discriminacion(
     repo: FirebirdRepository,
     fecha_id: int,
@@ -404,7 +415,7 @@ def exists_caso_discriminacion(
     ))
     return repo.fetch_one() is not None
 
-
+#metodo para insertar un caso de discriminacion, verificando antes que no exista un caso con los mismos atributos para evitar duplicados
 def insert_caso_discriminacion(
     repo: FirebirdRepository,
     fecha_id: int,
@@ -436,7 +447,7 @@ def insert_caso_discriminacion(
         fuente_id
     ))
 
-
+#metodo para determinar si se debe omitir una fila del excel, basado en el valor de la primera columna
 def should_skip_row(first_col) -> bool:
     if pd.isna(first_col):
         return True
@@ -448,14 +459,14 @@ def should_skip_row(first_col) -> bool:
 
     return False
 
-
+#metodo para leer una hoja del excel y devolver un dataframe, usando la fila 3 como header
 def build_sheet_dataframe(file_path: str, sheet_name: str) -> pd.DataFrame:
     """
     Lee cada hoja con header manual en 3.
     """
     return pd.read_excel(file_path, sheet_name=sheet_name, header=3)
 
-
+#metodo para procesar el dataframe de una hoja con formato antiguo (2016-2019) y devuelve una lista de diccionarios con los datos normalizados
 def process_old_format(df: pd.DataFrame, year: int) -> list[dict]:
     """
     Formato 2016-2019
@@ -497,7 +508,7 @@ def process_old_format(df: pd.DataFrame, year: int) -> list[dict]:
 
     return records
 
-
+#metodo para procesar el dataframe de una hoja con formato nuevo (2020-2023) y devuelve una lista de diccionarios con los datos normalizados
 def process_new_format(df: pd.DataFrame, year: int) -> list[dict]:
     """
     Formato 2020-2023
@@ -540,7 +551,7 @@ def process_new_format(df: pd.DataFrame, year: int) -> list[dict]:
 
     return records
 
-
+#metodo para procesar todas las hojas del excel y construir una lista de diccionarios con los datos normalizados
 def build_all_records(file_path: str) -> list[dict]:
     all_records = []
 
@@ -560,13 +571,13 @@ def build_all_records(file_path: str) -> list[dict]:
 
     return all_records
 
-
+#ejecutor etl
 def run_discriminacion_etl(repo: FirebirdRepository):
     if not Path(FILE_PATH).exists():
         raise FileNotFoundError(f"No existe el archivo: {FILE_PATH}")
 
     print(f"Procesando archivo: {FILE_PATH}")
-
+    # Obtener o crear fuente de dato
     fuente_id = get_or_create_fuente_dato(repo)
     dep_map = build_departamento_map(repo)
     records = build_all_records(FILE_PATH)
@@ -576,7 +587,7 @@ def run_discriminacion_etl(repo: FirebirdRepository):
     skipped_missing_fecha = 0
     skipped_missing_sexo = 0
     skipped_invalid = 0
-
+    # Insertar registros en la base de datos
     for rec in records:
         fecha_id = get_fecha_id(repo, rec["anio"])
         if not fecha_id:
@@ -585,11 +596,9 @@ def run_discriminacion_etl(repo: FirebirdRepository):
             continue
 
         departamento_id = None
-
         if not rec["departamento"]:
             skipped_missing_depto += 1
             continue
-
         departamento_id = dep_map.get(rec["departamento"])
         if not departamento_id:
             print(f"Departamento no encontrado: {rec['departamento']} ({rec['anio']})")
@@ -619,7 +628,7 @@ def run_discriminacion_etl(repo: FirebirdRepository):
             continue
 
         persona_id = create_persona(repo, sexo_id, rec["edad"])
-
+        #insertar caso de discriminacion
         insert_caso_discriminacion(
             repo,
             fecha_id=fecha_id,

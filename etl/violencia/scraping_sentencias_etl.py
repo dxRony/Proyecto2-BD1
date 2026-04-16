@@ -11,20 +11,20 @@ from repositories.firebird_repository import FirebirdRepository
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 URL_SENTENCIAS = "https://observatorio.mp.gob.gt/sentencias/"
-
+# Headers para la solicitud HTTP al sitio de sentencias
 HEADERS = {
     "User-Agent": "Mozilla/5.0",
     "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
     "Referer": "https://observatorio.mp.gob.gt/",
 }
-
+#fiscalias validas para identificar bloques de sentencias
 FISCALIAS_VALIDAS = {
     "Fiscalía de Sección de la Mujer",
     "Fiscalía contra el Delito de Femicidio",
     "Fiscalia de la Niñez y Adolescencia",
     "Fiscalía de la Niñez y Adolescencia",
 }
-
+# diccionarios para lables, normalizacion de meses y dias en español
 MAP_LABELS = {
     "Ubicación": "ubicacion",
     "Sentenciado": "sentenciado",
@@ -44,7 +44,6 @@ MAP_LABELS = {
     "Garantías de no repetición": "garantias_no_repeticion",
     "Garantias de no repeticion": "garantias_no_repeticion",
 }
-
 NOMBRES_MESES_ES = {
     1: "Enero",
     2: "Febrero",
@@ -59,7 +58,6 @@ NOMBRES_MESES_ES = {
     11: "Noviembre",
     12: "Diciembre",
 }
-
 DIAS_ES = {
     0: "Lunes",
     1: "Martes",
@@ -70,12 +68,13 @@ DIAS_ES = {
     6: "Domingo",
 }
 
-
+#metodo para normalizar texto eliminando espacios
 def normalize_text(value) -> str:
     if value is None or pd.isna(value):
         return ""
     return str(value).strip()
 
+# metodo para truncar texto a una longitud máxima, eliminando espacios
 def truncate_text(value: str, max_len: int):
     text = normalize_text(value)
     if not text:
@@ -84,6 +83,7 @@ def truncate_text(value: str, max_len: int):
         return text
     return text[:max_len].strip()
 
+# metodo para normalizar texto eliminando espacios y acentos
 def normalize_name(text) -> str:
     if text is None or pd.isna(text):
         return ""
@@ -94,7 +94,7 @@ def normalize_name(text) -> str:
     text = " ".join(text.split())
     return text
 
-
+# metodo para limpiar y normalizar valores de catalogos
 def clean_prefix_colon(value):
     text = normalize_text(value)
     if not text:
@@ -105,7 +105,7 @@ def clean_prefix_colon(value):
 
     return text if text else None
 
-
+# metodo para limpiar y normalizar valores de catalogos
 def build_unique_code(text: str, prefix: str = "", max_len: int = 10) -> str:
     base = normalize_name(text).replace(" ", "_").upper()
     digest = hashlib.md5(base.encode("utf-8")).hexdigest()[:3].upper()
@@ -120,7 +120,7 @@ def build_unique_code(text: str, prefix: str = "", max_len: int = 10) -> str:
     trimmed = base[:cut_len]
     return f"{prefix}{trimmed}_{digest}"
 
-
+#metodo para normalizar fiscalias, corrigiendo errores comunes de acentos y espacios
 def normalize_fiscalia(value):
     text = normalize_text(value)
 
@@ -131,7 +131,7 @@ def normalize_fiscalia(value):
 
     return replacements.get(text, text)
 
-
+#metodo apra splitear ubicacion (municipio, departamento) considerando diferentes formatos y casos de error
 def split_ubicacion(value):
     text = " ".join(normalize_text(value).split())
 
@@ -146,7 +146,7 @@ def split_ubicacion(value):
 
     return text, None
 
-
+# metodo para parsear fechas de sentencia considerando formato dd/mm/yyyy y posibles errores, devolviendo objeto date o None
 def parse_fecha_sentencia(fecha_texto: str):
     text = normalize_text(fecha_texto)
     if not text:
@@ -157,7 +157,7 @@ def parse_fecha_sentencia(fecha_texto: str):
     except Exception:
         return None
 
-
+#metodo para obtener o crear un departamento "Ignorado" con codigo "9999"
 def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -175,7 +175,7 @@ def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
     """, ("9999", "Ignorado"))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear un municipio "Ignorado" con codigo "M99999" asociado al departamento "Ignorado"
 def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -195,7 +195,7 @@ def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
     """, ("M99999", "Ignorado", id_departamento))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear una fuente de dati
 def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> int:
     dataset_name = truncate_text(dataset_name, 200)
 
@@ -217,7 +217,7 @@ def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> in
     """, ("MP Observatorio", dataset_name, "Web Scraping"))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear una fecha, devolviendo su id
 def get_or_create_fecha(repo: FirebirdRepository, fecha_obj: date) -> int:
     fecha_str = fecha_obj.strftime("%Y-%m-%d")
 
@@ -244,7 +244,7 @@ def get_or_create_fecha(repo: FirebirdRepository, fecha_obj: date) -> int:
     ))
     return repo.fetch_one()[0]
 
-
+#metodo para construir un mapa de nombres normalizados de departamentos a sus ids, asegurando que exista el departamento "Ignorado"
 def build_departamento_name_map(repo: FirebirdRepository) -> dict:
     get_or_create_departamento_ignorado(repo)
 
@@ -259,7 +259,7 @@ def build_departamento_name_map(repo: FirebirdRepository) -> dict:
         result[normalize_name(nombre)] = departamento_id
     return result
 
-
+#metodo para construir un mapa de nombres normalizados de municipios a sus ids, usando tanto el nombre solo como el nombre combinado con el id del departamento
 def build_municipio_dep_map(repo: FirebirdRepository) -> dict:
     get_or_create_municipio_ignorado(repo)
 
@@ -276,10 +276,7 @@ def build_municipio_dep_map(repo: FirebirdRepository) -> dict:
         result[key] = municipio_id
     return result
 
-def debug_len(label: str, value):
-    text = normalize_text(value)
-    print(f"{label} | len={len(text)} | value={text}")
-
+#metodo para obtener o crear tipo_fallo, retornando el id
 def get_or_create_tipo_fallo(repo: FirebirdRepository, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -299,7 +296,7 @@ def get_or_create_tipo_fallo(repo: FirebirdRepository, nombre: str) -> int:
     """, (codigo, nombre))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear un categoria_delito, devolviendo su id
 def get_or_create_categoria_delito(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -337,7 +334,7 @@ def get_or_create_categoria_delito(repo: FirebirdRepository, nombre: str):
 
     raise ValueError(f"No se pudo generar código único para categoría delito: {nombre}")
 
-
+#metodo para obtener o crear tipo de delito, retornando el id
 def get_or_create_delito(repo: FirebirdRepository, nombre: str, categoria_nombre: str | None = None):
     repo.execute("""
         SELECT id
@@ -374,7 +371,7 @@ def get_or_create_delito(repo: FirebirdRepository, nombre: str, categoria_nombre
 
     raise ValueError(f"No se pudo generar código único para delito: {nombre}")
 
-
+#metodo para obtener o crear un despacho, devolviendo su id
 def get_or_create_despacho_judicial(repo: FirebirdRepository, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -392,7 +389,7 @@ def get_or_create_despacho_judicial(repo: FirebirdRepository, nombre: str) -> in
     """, (nombre,))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear un tipo_hecho_delictivo, devolviendo su id
 def get_or_create_hecho_delictivo(
     repo: FirebirdRepository,
     id_fecha: int,
@@ -438,7 +435,7 @@ def get_or_create_hecho_delictivo(
     ))
     return repo.fetch_one()[0]
 
-
+# obtener o insertar proceso judicial y retornar su id
 def get_or_create_proceso_judicial(
     repo: FirebirdRepository,
     id_hecho_delictivo: int,
@@ -475,7 +472,7 @@ def get_or_create_proceso_judicial(
     ))
     return repo.fetch_one()[0]
 
-
+# obtener o insertar sentencia y retornar su id
 def get_or_create_sentencia(
     repo: FirebirdRepository,
     id_proceso_judicial: int,
@@ -504,7 +501,7 @@ def get_or_create_sentencia(
     ))
     return repo.fetch_one()[0]
 
-
+#metodo para fetchar el HTML de la página de sentencias, con manejo de errores y configuración de headers para evitar bloqueos, devolviendo el contenido como texto
 def fetch_html() -> str:
     response = requests.get(
         URL_SENTENCIAS,
@@ -515,7 +512,7 @@ def fetch_html() -> str:
     response.raise_for_status()
     return response.text
 
-
+#metodo para extraer las líneas principales del HTML de sentencias, buscando el contenedor que tiene las fiscalias y dividiendolo en lineas limpias, devolviendo una lista de strings
 def extract_main_lines() -> list[str]:
     html = fetch_html()
     soup = BeautifulSoup(html, "html.parser")
@@ -535,7 +532,7 @@ def extract_main_lines() -> list[str]:
 
     return lineas
 
-
+#metodo para dividir las líneas extraídas en bloques de sentencias, usando las fiscalias válidas como indicadores de inicio de bloque
 def split_sentencias(lineas: list[str]) -> list[list[str]]:
     indices = [i for i, x in enumerate(lineas) if x in FISCALIAS_VALIDAS]
 
@@ -548,7 +545,7 @@ def split_sentencias(lineas: list[str]) -> list[list[str]]:
 
     return bloques
 
-
+#metodo para parsear un bloque de sentencia, buscando los labels definidos y extrayendo sus valores asociados, devolviendo un diccionario con los campos encontrados
 def parse_bloque_sentencia(bloque: list[str]) -> dict:
     data = {
         "fiscalia": None,
@@ -578,7 +575,6 @@ def parse_bloque_sentencia(bloque: list[str]) -> dict:
         if line == ":":
             i += 1
             continue
-
         if line not in MAP_LABELS:
             i += 1
             continue
@@ -593,20 +589,17 @@ def parse_bloque_sentencia(bloque: list[str]) -> dict:
             if current == ":":
                 i += 1
                 continue
-
             if current in MAP_LABELS:
                 break
 
             values.append(current)
             i += 1
-
         value = " ".join(values).strip()
         if value:
             data[field_name] = value
-
     return data
 
-
+#metodo para limpiar y normalizar el dataframe de sentencias, aplicando las funciones de limpieza a los campos correspondientes
 def clean_sentencias_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
@@ -633,23 +626,19 @@ def clean_sentencias_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
     return df
 
-
+#metodo para construir el dataframe de sentencias, ejecutando el proceso completo de extracción, parseo y limpieza
 def build_sentencias_dataframe() -> pd.DataFrame:
     print("Extrayendo HTML de sentencias...")
     lineas = extract_main_lines()
     bloques = split_sentencias(lineas)
 
-    print(f"Total líneas: {len(lineas)}")
+    print(f"Total lineas: {len(lineas)}")
     print(f"Bloques de sentencias detectados: {len(bloques)}")
 
     records = []
     for i, bloque in enumerate(bloques, start=1):
         record = parse_bloque_sentencia(bloque)
         records.append(record)
-
-        if i <= 2:
-            print(f"Ejemplo sentencia {i}:")
-            print(record)
 
     df = pd.DataFrame(records)
     df = clean_sentencias_dataframe(df)
@@ -664,22 +653,21 @@ def build_sentencias_dataframe() -> pd.DataFrame:
 
     return df
 
-
+#ejecutor etl
 def run_sentencias_detalladas_etl(
     repo: FirebirdRepository,
     dataset_name: str = "Sentencias detalladas observatorio MP"
 ):
     print("Iniciando ETL de sentencias detalladas")
-
+    # Construir el dataframe de sentencias a partir del proceso de extracción y limpieza
     df = build_sentencias_dataframe()
 
     if df.empty:
         raise ValueError("No se encontraron sentencias para procesar")
-
+    #obteniendo llaves foraneas necesarias para las inserciones
     fuente_id = get_or_create_fuente_dato(repo, dataset_name)
     departamento_map = build_departamento_name_map(repo)
     municipio_dep_map = build_municipio_dep_map(repo)
-
     departamento_ignorado_id = get_or_create_departamento_ignorado(repo)
     municipio_ignorado_id = get_or_create_municipio_ignorado(repo)
 
@@ -689,7 +677,7 @@ def run_sentencias_detalladas_etl(
     sin_municipio = 0
     sin_delito = 0
     duplicados = 0
-
+    #recorriendo cada elemento en el df para insertar los registros
     for _, row in df.iterrows():
         fiscalia = truncate_text(normalize_text(row.get("fiscalia")), 150)
         municipio_nombre = truncate_text(normalize_text(row.get("municipio_sentencia")), 100)
@@ -715,7 +703,6 @@ def run_sentencias_detalladas_etl(
             if not departamento_id:
                 sin_departamento += 1
                 departamento_id = departamento_ignorado_id
-
             mun_norm = normalize_name(municipio_nombre)
             municipio_id = municipio_dep_map.get((dep_norm, mun_norm))
             if not municipio_id:

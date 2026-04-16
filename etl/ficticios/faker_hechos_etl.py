@@ -1,15 +1,14 @@
 import random
 from repositories.firebird_repository import FirebirdRepository
 
-
+#metodo para obtener ids de una tabla
 def get_ids(repo, table):
     repo.execute(f"SELECT id FROM {table}")
     return [r[0] for r in repo.fetch_all()]
 
-
+#ejecutor etl
 def run_faker_hechos_etl(repo: FirebirdRepository):
     print("Iniciando ETL faker de vínculos")
-
 
     # obtener datos de base
     personas = get_ids(repo, "persona")
@@ -24,7 +23,7 @@ def run_faker_hechos_etl(repo: FirebirdRepository):
         print("No hay personas o hechos para vincular")
         return
 
-    # separando personas por tipo
+    # separando personas por tipo (mayor, menor, generp)
     repo.execute("""
         SELECT p.id, p.edad, s.nombre
         FROM persona p
@@ -88,7 +87,7 @@ def run_faker_hechos_etl(repo: FirebirdRepository):
         ))
 
         if i % 400 == 0:
-            print(f"Involucramientos insertados: {i}")
+            print(f"involucramientos insertados: {i}")
 
 
     # violencia intrafamiliar

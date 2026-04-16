@@ -5,7 +5,7 @@ import pandas as pd
 
 from repositories.firebird_repository import FirebirdRepository
 
-
+# diccionarios para normalizacion de meses y dias en español
 MESES_ES = {
     "enero": 1,
     "febrero": 2,
@@ -21,7 +21,6 @@ MESES_ES = {
     "noviembre": 11,
     "diciembre": 12,
 }
-
 NOMBRES_MESES_ES = {
     1: "Enero",
     2: "Febrero",
@@ -36,7 +35,6 @@ NOMBRES_MESES_ES = {
     11: "Noviembre",
     12: "Diciembre",
 }
-
 DIAS_ES = {
     0: "Lunes",
     1: "Martes",
@@ -47,19 +45,19 @@ DIAS_ES = {
     6: "Domingo",
 }
 
-
+#metodo para normalizar texto eliminando espacios
 def normalize_text(value):
     if value is None or pd.isna(value):
         return ""
     return str(value).strip()
 
-
+#metodo para normalizar texto eliminando acentos, caracteres especiales y convirtiendo a minusculas
 def normalize_name(text):
     if text is None or pd.isna(text):
         return ""
     return str(text).strip().lower()
 
-
+#metodoa para generar codigo unico basado en el texto
 def build_unique_code(text: str, prefix: str = "", max_len: int = 10) -> str:
     base = normalize_name(text).replace(" ", "_").upper()
     digest = hashlib.md5(base.encode("utf-8")).hexdigest()[:3].upper()
@@ -74,11 +72,11 @@ def build_unique_code(text: str, prefix: str = "", max_len: int = 10) -> str:
     trimmed = base[:cut_len]
     return f"{prefix}{trimmed}_{digest}"
 
-
+#metodo para convertir nombre del mes a numero
 def parse_mes(mes):
     return MESES_ES.get(normalize_name(mes))
 
-
+#metodo para convertir a entero de forma segura, devolviendo None si no se puede convertir o si el valor es considerado "ignorado"
 def safe_int(val):
     try:
         if normalize_name(val) in {"ignorado", "ignorada", "nan", ""}:
@@ -87,7 +85,7 @@ def safe_int(val):
     except Exception:
         return None
 
-
+#metodo para obtener o crear una fecha en la base de datos y devolver su id
 def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int):
     fecha_str = f"{anio:04d}-{mes:02d}-{dia:02d}"
 
@@ -116,7 +114,7 @@ def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int)
     ))
     return repo.fetch_one()[0]
 
-
+#metodo para renombrar las columnas del dataframe a nombres canónicos esperados, basándose en el orden de las columnas
 def canonicalize(df: pd.DataFrame) -> pd.DataFrame:
     cols = [
         "num",
@@ -141,7 +139,7 @@ def canonicalize(df: pd.DataFrame) -> pd.DataFrame:
 
     return df.rename(columns=dict(zip(df.columns, cols)))
 
-
+#metodo para obtener o crear una fuente de dato y devolver su id
 def get_or_create_fuente_dato(
     repo: FirebirdRepository,
     institucion: str,
@@ -168,7 +166,7 @@ def get_or_create_fuente_dato(
 
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear un sexo y devolver su id
 def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     nombre_norm = normalize_name(nombre)
 
@@ -198,7 +196,7 @@ def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     """, (codigo, nombre_final))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear un grupo etario y devolver su id, segun el nombre del grupo
 def get_or_create_grupo_etario(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -221,7 +219,7 @@ def get_or_create_grupo_etario(repo: FirebirdRepository, nombre: str):
     """, (codigo, nombre, None, None, "Evaluación INACIF"))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear una categoria de delito y devolver su id
 def get_or_create_categoria_delito(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -257,9 +255,9 @@ def get_or_create_categoria_delito(repo: FirebirdRepository, nombre: str):
         suffix = str(intento + 1)
         codigo = base_codigo[:10 - len(suffix)] + suffix
 
-    raise ValueError(f"No se pudo generar código único para categoría delito: {nombre}")
+    raise ValueError(f"No se pudo generar codigo único para categoría delito: {nombre}")
 
-
+#metodo para obtener o crear un delito y devolver su id, segun el nombre del delito y la categoria a la que pertenece
 def get_or_create_delito(repo: FirebirdRepository, nombre: str, categoria_nombre: str | None):
     repo.execute("""
         SELECT id
@@ -295,7 +293,7 @@ def get_or_create_delito(repo: FirebirdRepository, nombre: str, categoria_nombre
 
     raise ValueError(f"No se pudo generar código único para delito: {nombre}")
 
-
+#metodo para obtener o crear un departamento con codigo "9999" y nombre "Ignorado", y devolver su id
 def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -313,7 +311,7 @@ def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
     """, ("9999", "Ignorado"))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear un municipio "Ignorado" con codigo "M99999" asociado al departamento "Ignorado"
 def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -333,7 +331,7 @@ def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
     """, ("M99999", "Ignorado", id_departamento))
     return repo.fetch_one()[0]
 
-
+#metodo para crear una persona, devolviendo su id
 def create_persona(repo: FirebirdRepository, id_sexo: int, edad: int | None = None) -> int:
     repo.execute("""
         INSERT INTO persona (id_sexo, edad)
@@ -342,7 +340,7 @@ def create_persona(repo: FirebirdRepository, id_sexo: int, edad: int | None = No
     """, (id_sexo, edad))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear una condicion de edad y devolver su id, segun el nombre de la condicion
 def get_or_create_condicion_edad(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -365,7 +363,7 @@ def get_or_create_condicion_edad(repo: FirebirdRepository, nombre: str):
     """, (codigo, nombre))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear un detalle_persona asociado a una persona, con una condicion de edad dada
 def get_or_create_detalle_persona(
     repo: FirebirdRepository,
     id_persona: int,
@@ -401,7 +399,7 @@ def get_or_create_detalle_persona(
         None
     ))
 
-
+#metodo para crear un hecho delictivo, devolviendo su id
 def create_hecho_delictivo(
     repo: FirebirdRepository,
     id_fecha: int,
@@ -431,7 +429,7 @@ def create_hecho_delictivo(
     ))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear un tipo de involucramiento y devolver su id, segun el nombre del tipo de involucramiento
 def get_or_create_involucramiento(repo: FirebirdRepository, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -451,7 +449,7 @@ def get_or_create_involucramiento(repo: FirebirdRepository, nombre: str) -> int:
     """, (codigo, nombre))
     return repo.fetch_one()[0]
 
-
+#metodo para insertar un involucramiento_hecho asociado a una persona con un hecho delictivo
 def insert_involucramiento_hecho(
     repo: FirebirdRepository,
     id_persona: int,
@@ -477,7 +475,7 @@ def insert_involucramiento_hecho(
         id_fuente_dato
     ))
 
-
+#ejecutor etl
 def run_inacif_etl(
     repo: FirebirdRepository,
     file_path: str,
@@ -487,10 +485,10 @@ def run_inacif_etl(
         raise FileNotFoundError(file_path)
 
     print(f"Procesando archivo: {file_path}")
-
+    # Cargar datos desde Excel y normalizar columnas
     df = pd.read_excel(file_path, sheet_name="Sheet1", header=0)
     df = canonicalize(df)
-
+    #obtenuend llaves foraneas necesarias para las tablas
     fuente_id = get_or_create_fuente_dato(repo, "INACIF", dataset_name, "Excel")
     municipio_id_ignorado = get_or_create_municipio_ignorado(repo)
     involucramiento_id = get_or_create_involucramiento(repo, "Evaluado")
@@ -498,7 +496,7 @@ def run_inacif_etl(
     inserted = 0
     skipped_missing_fecha = 0
     skipped_missing_tipo_eval = 0
-
+    #recorriendo filas del dataframe para insertar datos en la base de datos
     for _, row in df.iterrows():
         anio = safe_int(row["anio"])
         mes = parse_mes(row["mes"])
@@ -507,7 +505,6 @@ def run_inacif_etl(
         if not anio or not mes or not dia:
             skipped_missing_fecha += 1
             continue
-
         fecha_id = get_or_create_fecha(repo, anio, mes, dia)
 
         sexo = normalize_text(row["sexo"])

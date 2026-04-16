@@ -6,7 +6,7 @@ import pandas as pd
 from repositories.firebird_repository import FirebirdRepository
 from utils.normalizers import safe_int
 
-
+#ruta de arcchivo
 FILE_PATH = "Violencia/Violencia contra la ninez/Quejas Mineduc/20240719123138C8M6SpIQkU1dO569us4WzmhiEojxPhwf.xlsx"
 
 TIPOS_AGRESION_MAP = {
@@ -18,11 +18,12 @@ TIPOS_AGRESION_MAP = {
     "violencia_sexual": "Violencia sexual",
     "abuso_de_autoridad": "Abuso de autoridad",
 }
-
+#alias extra para peten
 DEPARTAMENTO_ALIASES = {
     "peten": "el peten",
 }
 
+#metodo para normalizar texto eliminando espacios
 def normalize_text(text: str) -> str:
     if text is None:
         return ""
@@ -32,7 +33,7 @@ def normalize_text(text: str) -> str:
     text = "".join(c for c in text if unicodedata.category(c) != "Mn")
     return text
 
-
+#metodo para obtener o crear una fuente de dati
 def get_or_create_fuente_dato(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -54,7 +55,7 @@ def get_or_create_fuente_dato(repo: FirebirdRepository) -> int:
 
     return repo.fetch_one()[0]
 
-
+#metodo para obtener el id de la fecha 202X-01-01
 def get_fecha_id(repo: FirebirdRepository, anio: int):
     repo.execute("""
         SELECT id
@@ -65,7 +66,7 @@ def get_fecha_id(repo: FirebirdRepository, anio: int):
     row = repo.fetch_one()
     return row[0] if row else None
 
-
+#metodo para obtener o crear un tipo_agresion, devolviendo su id
 def get_or_create_tipo_agresion(repo: FirebirdRepository, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -85,7 +86,7 @@ def get_or_create_tipo_agresion(repo: FirebirdRepository, nombre: str) -> int:
 
     return repo.fetch_one()[0]
 
-
+#metodo para construir un mapa de nombres normalizados de departamentos a sus ids, asegurando que exista el departamento "Ignorado"
 def build_departamento_map(repo: FirebirdRepository) -> dict:
     repo.execute("""
         SELECT id, nombre
@@ -99,7 +100,7 @@ def build_departamento_map(repo: FirebirdRepository) -> dict:
 
     return dep_map
 
-
+#metodo para verificar si ya existe una queja con la misma combinacion de departamento, fecha, tipo de agresion y fuente de dato
 def exists_queja(repo: FirebirdRepository, dep_id: int, fecha_id: int, tipo_id: int, fuente_id: int) -> bool:
     repo.execute("""
         SELECT 1
@@ -112,7 +113,7 @@ def exists_queja(repo: FirebirdRepository, dep_id: int, fecha_id: int, tipo_id: 
 
     return repo.fetch_one() is not None
 
-
+#metodo para insertar una nueva queja en la tabla queja_mineduc_estadistica
 def insert_queja(
     repo: FirebirdRepository,
     dep_id: int,
@@ -132,7 +133,7 @@ def insert_queja(
         VALUES (?, ?, ?, ?, ?)
     """, (dep_id, fecha_id, tipo_id, cantidad, fuente_id))
 
-
+#metodo para construir un dataframe limpio a partir del archivo excel, quitando encabezados basura, filas vacias y la fila total
 def build_dataframe_from_excel(file_path: str) -> pd.DataFrame:
     raw = pd.read_excel(file_path, sheet_name="C1", header=None)
 
@@ -158,7 +159,7 @@ def build_dataframe_from_excel(file_path: str) -> pd.DataFrame:
 
     return df
 
-
+#metodo para transformar el dataframe de formato ancho a formato largo, limpiando y normalizando los valores de cantidad
 def melt_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df_melt = df.melt(
         id_vars=["departamento"],
@@ -184,16 +185,16 @@ def melt_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
     return df_melt
 
-
+#ejecutor etl
 def run_quejas_mineduc_etl(repo: FirebirdRepository):
     if not Path(FILE_PATH).exists():
         raise FileNotFoundError(f"No existe el archivo: {FILE_PATH}")
 
     print(f"Procesando archivo: {FILE_PATH}")
-
+    # Cargar el archivo Excel y normalizar columnas
     df = build_dataframe_from_excel(FILE_PATH)
     df_melt = melt_dataframe(df)
-
+    #obteniendo llaves foraneas necesarias para las inserciones
     fuente_id = get_or_create_fuente_dato(repo)
     fecha_id = get_fecha_id(repo, 2023)
 
@@ -204,7 +205,7 @@ def run_quejas_mineduc_etl(repo: FirebirdRepository):
 
     inserted = 0
     skipped = 0
-
+    #recorriendo cada elemento en el df para insertar atenciones brindadas
     for _, row in df_melt.iterrows():
         departamento_original = str(row["departamento"]).strip()
         departamento_key = normalize_text(departamento_original)

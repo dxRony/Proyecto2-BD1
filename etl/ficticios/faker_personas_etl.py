@@ -5,13 +5,13 @@ from repositories.firebird_repository import FirebirdRepository
 
 fake = Faker("es_ES")
 
-
+#metodo para normalizar texto eliminando espacios
 def normalize_text(value) -> str:
     if value is None:
         return ""
     return str(value).strip()
 
-
+#metodo para obtener ids de random una tabla
 def get_random_id_from_table(repo: FirebirdRepository, table_name: str):
     repo.execute(f"SELECT id FROM {table_name}")
     rows = repo.fetch_all()
@@ -19,7 +19,7 @@ def get_random_id_from_table(repo: FirebirdRepository, table_name: str):
         return None
     return random.choice(rows)[0]
 
-
+#metodo para obtener o crear sexo, retornando el id
 def get_or_create_sexo(repo: FirebirdRepository, codigo: str, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -37,7 +37,7 @@ def get_or_create_sexo(repo: FirebirdRepository, codigo: str, nombre: str) -> in
     """, (codigo, nombre))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear condicion_edad, retornando el id
 def get_or_create_condicion_edad(repo: FirebirdRepository, codigo: str, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -55,7 +55,7 @@ def get_or_create_condicion_edad(repo: FirebirdRepository, codigo: str, nombre: 
     """, (codigo, nombre))
     return repo.fetch_one()[0]
 
-
+#metodo para crear una persona, devolviendo su id
 def create_persona(repo: FirebirdRepository, id_sexo: int, edad: int | None = None) -> int:
     repo.execute("""
         INSERT INTO persona (id_sexo, edad)
@@ -64,7 +64,7 @@ def create_persona(repo: FirebirdRepository, id_sexo: int, edad: int | None = No
     """, (id_sexo, edad))
     return repo.fetch_one()[0]
 
-
+#metodo para crear un detalle persona y vincularlo con la personsa
 def create_detalle_persona(
     repo: FirebirdRepository,
     id_persona: int,
@@ -96,7 +96,7 @@ def create_detalle_persona(
         id_orientacion
     ))
 
-
+#metodo para elegir escolaridad compatible con la edad
 def pick_escolaridad_for_age(repo: FirebirdRepository, edad: int):
     repo.execute("SELECT id, nombre FROM escolaridad")
     rows = repo.fetch_all()
@@ -121,7 +121,7 @@ def pick_escolaridad_for_age(repo: FirebirdRepository, edad: int):
 
     return random.choice(rows)[0]
 
-
+#ejecutor etl
 def run_faker_personas_etl(
     repo: FirebirdRepository,
     total_menores: int = 1500,

@@ -6,17 +6,13 @@ import hashlib
 
 from repositories.firebird_repository import FirebirdRepository
 
-
-# =========================
-# Normalización
-# =========================
-
+#metodo para normalizar texto eliminando espacios
 def normalize_text(value) -> str:
     if value is None or pd.isna(value):
         return ""
     return str(value).strip()
 
-
+#metodo para normalizar texto eliminando acentos, caracteres especiales y convirtiendo a minusculas
 def normalize_name(text) -> str:
     if text is None or pd.isna(text):
         return ""
@@ -26,7 +22,7 @@ def normalize_name(text) -> str:
     text = " ".join(text.split())
     return text
 
-
+#metodo para convertir a entero de forma segura, devolviendo None si no se puede convertir o si el valor es considerado "ignorado"
 def safe_int(value):
     if value is None or pd.isna(value):
         return None
@@ -35,7 +31,7 @@ def safe_int(value):
     except Exception:
         return None
 
-
+# metodo para limpiar y normalizar valores de catalogos "ignorado"
 def clean_catalog_value(value: str, default: str = "Ignorado") -> str:
     text = normalize_text(value)
     norm = normalize_name(text)
@@ -45,23 +41,32 @@ def clean_catalog_value(value: str, default: str = "Ignorado") -> str:
 
     return text
 
-
-# =========================
-# Fecha
-# =========================
-
+# diccionarios para normalizacion de meses y dias en español
 NOMBRES_MESES_ES = {
-    1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril",
-    5: "Mayo", 6: "Junio", 7: "Julio", 8: "Agosto",
-    9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre",
+    1: "Enero", 
+    2: "Febrero", 
+    3: "Marzo", 
+    4: "Abril",
+    5: "Mayo", 
+    6: "Junio", 
+    7: "Julio", 
+    8: "Agosto",
+    9: "Septiembre", 
+    10: "Octubre", 
+    11: "Noviembre", 
+    12: "Diciembre",
 }
-
 DIAS_ES = {
-    0: "Lunes", 1: "Martes", 2: "Miércoles",
-    3: "Jueves", 4: "Viernes", 5: "Sábado", 6: "Domingo",
+    0: "Lunes", 
+    1: "Martes", 
+    2: "Miércoles",
+    3: "Jueves", 
+    4: "Viernes", 
+    5: "Sábado", 
+    6: "Domingo",
 }
 
-
+#metodo para obtener o crear una fecha, devolviendo su id
 def get_or_create_fecha(repo: FirebirdRepository, anio: int):
     fecha_str = f"{anio:04d}-01-01"
 
@@ -87,11 +92,7 @@ def get_or_create_fecha(repo: FirebirdRepository, anio: int):
 
     return repo.fetch_one()[0]
 
-
-# =========================
-# Departamento / Municipio
-# =========================
-
+#metodo para obtener o crear un departamento "Ignorado" con codigo "9999"
 def get_or_create_departamento_ignorado(repo: FirebirdRepository):
     repo.execute("SELECT id FROM departamento WHERE codigo = ?", ("9999",))
     row = repo.fetch_one()
@@ -105,7 +106,7 @@ def get_or_create_departamento_ignorado(repo: FirebirdRepository):
     """, ("9999", "Ignorado"))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear un municipio "Ignorado" con codigo "M99999" asociado al departamento "Ignorado"
 def get_or_create_municipio_ignorado(repo: FirebirdRepository):
     repo.execute("SELECT id FROM municipio WHERE codigo = ?", ("M99999",))
     row = repo.fetch_one()
@@ -122,7 +123,7 @@ def get_or_create_municipio_ignorado(repo: FirebirdRepository):
 
     return repo.fetch_one()[0]
 
-
+#metodo para construir un mapa de nombres normalizados de departamentos a sus ids, asegurando que exista el departamento "Ignorado"
 def build_departamento_name_map(repo: FirebirdRepository):
     get_or_create_departamento_ignorado(repo)
 
@@ -134,7 +135,7 @@ def build_departamento_name_map(repo: FirebirdRepository):
         result[normalize_name(nombre)] = dep_id
     return result
 
-
+#metodo para construir un mapa de nombres normalizados de municipios a sus ids, usando tanto el nombre solo como el nombre combinado con el id del departamento, asegurando que exista el municipio "Ignorado"
 def build_municipio_name_map(repo: FirebirdRepository):
     get_or_create_municipio_ignorado(repo)
 
@@ -153,11 +154,7 @@ def build_municipio_name_map(repo: FirebirdRepository):
 
     return result
 
-
-# =========================
-# Despacho judicial
-# =========================
-
+#metodo para obtener o crear despacho, retornando el id
 def get_or_create_despacho(repo: FirebirdRepository, nombre: str):
     nombre = clean_catalog_value(nombre, "Ignorado")
     nombre = nombre[:150]
@@ -179,11 +176,7 @@ def get_or_create_despacho(repo: FirebirdRepository, nombre: str):
 
     return repo.fetch_one()[0]
 
-
-# =========================
-# Insert
-# =========================
-
+#metodo para insertar una medida de seguridad
 def insert_medida(
     repo: FirebirdRepository,
     id_municipio: int,
@@ -207,10 +200,7 @@ def insert_medida(
     ))
 
 
-# =========================
-# Canonicalización
-# =========================
-
+#metodo para renombrar las columnas del dataframe a nombres canónicos esperados, basándose en el orden de las columnas
 def canonicalize_dataframe_columns(df: pd.DataFrame):
     expected = [
         "departamento",
@@ -227,10 +217,7 @@ def canonicalize_dataframe_columns(df: pd.DataFrame):
     return df.rename(columns=rename_map)
 
 
-# =========================
-# ETL principal
-# =========================
-
+#ejecutor etl
 def run_medidas_seguridad_etl(
     repo: FirebirdRepository,
     file_path: str,
@@ -240,10 +227,10 @@ def run_medidas_seguridad_etl(
         raise FileNotFoundError(file_path)
 
     print(f"Procesando: {file_path}")
-
+    # Cargar el archivo Excel y normalizar columnas
     df = pd.read_excel(file_path, sheet_name="Medidas de seguridad", header=0)
     df = canonicalize_dataframe_columns(df)
-
+    # Limpiar y normalizar los datos
     df["departamento"] = df["departamento"].apply(lambda x: clean_catalog_value(x))
     df["municipio"] = df["municipio"].apply(lambda x: clean_catalog_value(x))
     df["despacho"] = df["despacho"].apply(lambda x: clean_catalog_value(x))
@@ -263,7 +250,7 @@ def run_medidas_seguridad_etl(
 
     inserted = 0
     skipped_municipio = 0
-
+    #recorriendo cada elemento en el df para insertar atenciones brindadas
     for _, row in df.iterrows():
         anio = row["anio"]
         fecha_id = get_or_create_fecha(repo, anio)
@@ -272,13 +259,11 @@ def run_medidas_seguridad_etl(
         dep_id = departamento_map.get(dep_name)
 
         mun_name = normalize_name(row["municipio"])
-
         mun_key = f"{mun_name}|{dep_id}"
         municipio_id = municipio_map.get(mun_key)
 
         if not municipio_id:
             municipio_id = municipio_map.get(mun_name)
-
         if not municipio_id:
             skipped_municipio += 1
             municipio_id = get_or_create_municipio_ignorado(repo)

@@ -7,6 +7,7 @@ import pandas as pd
 
 from repositories.firebird_repository import FirebirdRepository
 
+# diccionarios para normalizacion de meses y dias en español
 MESES_ES = {
     "enero": 1,
     "febrero": 2,
@@ -22,7 +23,6 @@ MESES_ES = {
     "noviembre": 11,
     "diciembre": 12,
 }
-
 NOMBRES_MESES_ES = {
     1: "Enero",
     2: "Febrero",
@@ -37,7 +37,6 @@ NOMBRES_MESES_ES = {
     11: "Noviembre",
     12: "Diciembre",
 }
-
 DIAS_ES = {
     0: "Lunes",
     1: "Martes",
@@ -48,6 +47,7 @@ DIAS_ES = {
     6: "Domingo",
 }
 
+#metodo para obtener o crear un departamento "Ignorado" con codigo "9999"
 def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -66,7 +66,7 @@ def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
 
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear un municipio "Ignorado" con codigo "M99999" asociado al departamento "Ignorado"
 def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -87,6 +87,7 @@ def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
 
     return repo.fetch_one()[0]
 
+# metodo para limpiar y normalizar valores de catalogos "ignorado"
 def clean_catalog_value(value: str, default: str = "Ignorado") -> str:
     text = normalize_text(value)
     norm = normalize_name(text)
@@ -96,11 +97,13 @@ def clean_catalog_value(value: str, default: str = "Ignorado") -> str:
 
     return text
 
+#metodo para normalizar texto eliminando espacios
 def normalize_text(value) -> str:
     if value is None or pd.isna(value):
         return ""
     return str(value).strip()
 
+#metodo para normalizar texto eliminando acentos, caracteres especiales y convirtiendo a minusculas
 def normalize_name(text) -> str:
     if text is None or pd.isna(text):
         return ""
@@ -111,6 +114,7 @@ def normalize_name(text) -> str:
     text = " ".join(text.split())
     return text
 
+#metodo para convertir a entero de forma segura, devolviendo None si no se puede convertir o si el valor es considerado "ignorado"
 def safe_int(value):
     if value is None or pd.isna(value):
         return None
@@ -122,6 +126,7 @@ def safe_int(value):
     except Exception:
         return None
 
+#metodoa para generar codigo unico basado en el texto
 def build_unique_code(text: str, prefix: str = "", max_len: int = 10) -> str:
     base = normalize_name(text).replace(" ", "_").upper()
     digest = hashlib.md5(base.encode("utf-8")).hexdigest()[:3].upper()
@@ -136,6 +141,7 @@ def build_unique_code(text: str, prefix: str = "", max_len: int = 10) -> str:
     trimmed = base[:cut_len]
     return f"{prefix}{trimmed}_{digest}"
 
+#metodo para renombrar las columnas del dataframe a nombres canónicos esperados, basándose en el orden de las columnas
 def canonicalize_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
     expected_columns = [
         "num_corre",
@@ -165,9 +171,11 @@ def canonicalize_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
 
     return df.rename(columns=rename_map)
 
+#metodo para convertir nombre de mes a numero
 def parse_mes_to_int(mes_texto: str):
     return MESES_ES.get(normalize_name(mes_texto))
 
+#metodo para obtener o crear una fuente de dato
 def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> int:
     repo.execute("""
         SELECT id
@@ -188,6 +196,7 @@ def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> in
     """, ("INACIF", dataset_name, "Excel"))
     return repo.fetch_one()[0]
 
+#metodo para obtener o crear una fecha, devolviendo su id
 def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int):
     fecha_str = f"{anio:04d}-{mes:02d}-{dia:02d}"
 
@@ -216,6 +225,7 @@ def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int)
     ))
     return repo.fetch_one()[0]
 
+#metodo para construir un mapa de nombres normalizados de departamentos a sus ids, asegurando que exista el departamento "Ignorado"
 def build_municipio_name_map(repo: FirebirdRepository) -> dict:
     get_or_create_municipio_ignorado(repo)
 
@@ -231,6 +241,7 @@ def build_municipio_name_map(repo: FirebirdRepository) -> dict:
 
     return result
 
+#metodo para obtener o crear sexo, retornando el id
 def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     nombre_norm = normalize_name(nombre)
 
@@ -263,6 +274,7 @@ def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     """, (codigo, nombre_final))
     return repo.fetch_one()[0]
 
+#metodo para obtener o crear condicion_edad, retornando el id
 def get_or_create_condicion_edad(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -285,6 +297,7 @@ def get_or_create_condicion_edad(repo: FirebirdRepository, nombre: str):
     """, (codigo, nombre))
     return repo.fetch_one()[0]
 
+#metodo para limpiar edad
 def clean_edad(value):
     edad = safe_int(value)
     if edad is None:
@@ -298,6 +311,7 @@ def clean_edad(value):
 
     return edad
 
+#metodo para obtener o crear grupo etario, retornando el id
 def get_or_create_grupo_etario(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -320,6 +334,7 @@ def get_or_create_grupo_etario(repo: FirebirdRepository, nombre: str):
     """, (codigo, nombre, None, None, "Necropsias"))
     return repo.fetch_one()[0]
 
+#metodo para obtener o crear categoria_delito, retornando el id
 def get_or_create_categoria_delito(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -343,7 +358,8 @@ def get_or_create_categoria_delito(repo: FirebirdRepository, nombre: str):
     return repo.fetch_one()[0]
 
 
-def classify_causa_muerte(causa: str) -> str:
+#metodo para clasificar causa de muerte en categorias amplias basadas en palabras clave
+def clasificar_causa_muerte(causa: str) -> str:
     causa_norm = normalize_name(causa)
 
     if "arma de fuego" in causa_norm:
@@ -361,7 +377,7 @@ def classify_causa_muerte(causa: str) -> str:
 
     return "Otras causas de muerte"
 
-
+#metodo para obtener o crear delito, retornando el id
 def get_or_create_delito(repo: FirebirdRepository, nombre: str, categoria_nombre: str | None):
     repo.execute("""
         SELECT id
@@ -382,7 +398,7 @@ def get_or_create_delito(repo: FirebirdRepository, nombre: str, categoria_nombre
     """, (codigo, nombre, None, id_categoria))
     return repo.fetch_one()[0]
 
-
+#metodo para crear una persona, devolviendo su id
 def create_persona(repo: FirebirdRepository, id_sexo: int, edad: int | None) -> int:
     repo.execute("""
         INSERT INTO persona (id_sexo, edad)
@@ -391,7 +407,7 @@ def create_persona(repo: FirebirdRepository, id_sexo: int, edad: int | None) -> 
     """, (id_sexo, edad))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear detalle persona, devolviendo su id
 def get_or_create_detalle_persona(
     repo: FirebirdRepository,
     id_persona: int,
@@ -427,7 +443,7 @@ def get_or_create_detalle_persona(
         None
     ))
 
-
+#metodo para crear un hecho_delictivo, devolviendo su id
 def create_hecho_delictivo(
     repo: FirebirdRepository,
     id_fecha: int,
@@ -455,7 +471,7 @@ def create_hecho_delictivo(
     ))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear un involucramiento, devolviendo su id
 def get_or_create_involucramiento(repo: FirebirdRepository, nombre: str = "Fallecido") -> int:
     repo.execute("""
         SELECT id
@@ -475,6 +491,7 @@ def get_or_create_involucramiento(repo: FirebirdRepository, nombre: str = "Falle
     """, (codigo, nombre))
     return repo.fetch_one()[0]
 
+#metodo para obtener o crear una causa_muerte, devolviendo su id
 def get_or_create_causa_muerte(repo: FirebirdRepository, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -494,6 +511,7 @@ def get_or_create_causa_muerte(repo: FirebirdRepository, nombre: str) -> int:
     """, (codigo, nombre))
     return repo.fetch_one()[0]
 
+#metodo para insertar una necropsia, devolviendo su id
 def insert_necropsia(
     repo: FirebirdRepository,
     id_persona: int,
@@ -530,6 +548,7 @@ def insert_necropsia(
     ))
     return repo.fetch_one()[0]
 
+#metodo para insertar un involucramiento_hecho, devolviendo su id
 def insert_involucramiento_hecho(
     repo: FirebirdRepository,
     id_persona: int,
@@ -555,7 +574,7 @@ def insert_involucramiento_hecho(
         id_fuente_dato
     ))
 
-
+#ejecutor etl
 def run_necropsias_etl(
     repo: FirebirdRepository,
     file_path: str,
@@ -565,10 +584,10 @@ def run_necropsias_etl(
         raise FileNotFoundError(f"No existe el archivo: {file_path}")
 
     print(f"Procesando archivo: {file_path}")
-
+    # Cargar el archivo Excel y normalizar columnas
     df = pd.read_excel(file_path, sheet_name="Sheet1", header=0)
     df = canonicalize_dataframe_columns(df)
-
+    #obteniendo llaves foraneas necesarias para las inserciones
     fuente_id = get_or_create_fuente_dato(repo, dataset_name)
     municipio_name_map = build_municipio_name_map(repo)
     involucramiento_id = get_or_create_involucramiento(repo, "Fallecido")
@@ -578,7 +597,7 @@ def run_necropsias_etl(
     skipped_missing_municipio = 0
     skipped_missing_sexo = 0
     skipped_missing_causa = 0
-
+    #recorriendo cada elemento en el df para insertar necropsias
     for _, row in df.iterrows():
         anio = safe_int(row.get("anio_ing"))
         mes = parse_mes_to_int(row.get("mes_ing"))
@@ -587,7 +606,6 @@ def run_necropsias_etl(
         if anio is None or mes is None or dia is None:
             skipped_missing_fecha += 1
             continue
-
         try:
             fecha_id = get_or_create_fecha(repo, anio, mes, dia)
         except Exception:
@@ -596,7 +614,6 @@ def run_necropsias_etl(
 
         municipio_nombre = normalize_text(row.get("municipio_ocu"))
         municipio_norm = normalize_name(municipio_nombre)
-
         if municipio_norm in {"", "ignorado", "ignorada", "9999", "999", "sd", "s/d"}:
             skipped_missing_municipio += 1
             municipio_id = municipio_name_map.get("ignorado")
@@ -605,25 +622,22 @@ def run_necropsias_etl(
             if not municipio_id:
                 skipped_missing_municipio += 1
                 municipio_id = municipio_name_map.get("ignorado")
-
         if not municipio_id:
             municipio_id = get_or_create_municipio_ignorado(repo)
 
         sexo_nombre = clean_catalog_value(row.get("sexo_per"))
         if normalize_name(sexo_nombre) == "ignorado":
             skipped_missing_sexo += 1
-
         sexo_id = get_or_create_sexo(repo, sexo_nombre)
 
         causa_muerte = clean_catalog_value(row.get("causa_muerte"))
         if normalize_name(causa_muerte) == "ignorado":
             skipped_missing_causa += 1
             continue
-
         causa_muerte_id = get_or_create_causa_muerte(repo, causa_muerte)
         
         edad = clean_edad(row.get("edad_per"))
-
+        
         grupo_etario_nombre = clean_catalog_value(row.get("edad_quinquenales"))
         if normalize_name(grupo_etario_nombre) == "ignorado":
             grupo_etario_nombre = ""
@@ -634,7 +648,7 @@ def run_necropsias_etl(
             condicion_edad_nombre = ""
         condicion_edad_id = get_or_create_condicion_edad(repo, condicion_edad_nombre) if condicion_edad_nombre else None
 
-        categoria_causa = classify_causa_muerte(causa_muerte)
+        categoria_causa = clasificar_causa_muerte(causa_muerte)
         delito_id = get_or_create_delito(repo, causa_muerte, categoria_causa)
 
         persona_id = create_persona(repo, sexo_id, edad)

@@ -6,6 +6,7 @@ import pandas as pd
 
 from repositories.firebird_repository import FirebirdRepository
 
+# diccionarios para normalizacion de meses y dias en español
 MESES_ES = {
     "enero": 1,
     "febrero": 2,
@@ -21,7 +22,6 @@ MESES_ES = {
     "noviembre": 11,
     "diciembre": 12,
 }
-
 NOMBRES_MESES_ES = {
     1: "Enero",
     2: "Febrero",
@@ -36,7 +36,6 @@ NOMBRES_MESES_ES = {
     11: "Noviembre",
     12: "Diciembre",
 }
-
 DIAS_ES = {
     0: "Lunes",
     1: "Martes",
@@ -47,6 +46,7 @@ DIAS_ES = {
     6: "Domingo",
 }
 
+#metodo para obtener o crear un departamento "Ignorado" con codigo "9999"
 def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -65,6 +65,7 @@ def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
 
     return repo.fetch_one()[0]
 
+#metodo para obtener o crear un municipio "Ignorado" con codigo "M99999" asociado al departamento "Ignorado"
 def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -85,7 +86,7 @@ def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
 
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear sexo, retornando el id
 def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     nombre_norm = normalize_name(nombre)
 
@@ -119,11 +120,13 @@ def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
 
     return repo.fetch_one()[0]
 
+#metodo para normalizar texto eliminando espacios
 def normalize_text(value) -> str:
     if value is None or pd.isna(value):
         return ""
     return str(value).strip()
 
+#metodo para normalizar texto eliminando acentos, caracteres especiales y convirtiendo a minusculas
 def normalize_name(text) -> str:
     if text is None or pd.isna(text):
         return ""
@@ -135,6 +138,7 @@ def normalize_name(text) -> str:
     text = " ".join(text.split())
     return text
 
+#metodo para convertir a entero de forma segura, devolviendo None si no se puede convertir o si el valor es considerado "ignorado"
 def safe_int(value):
     if value is None or pd.isna(value):
         return None
@@ -143,6 +147,7 @@ def safe_int(value):
     except Exception:
         return None
 
+#metodoa para generar codigo unico basado en el texto
 def build_unique_code(text: str, prefix: str = "", max_len: int = 20) -> str:
     base = normalize_name(text).replace(" ", "_").upper()
     digest = hashlib.md5(base.encode("utf-8")).hexdigest()[:6].upper()
@@ -161,6 +166,7 @@ def build_unique_code(text: str, prefix: str = "", max_len: int = 20) -> str:
     trimmed = base[:cut_len]
     return f"{prefix}{trimmed}_{digest}"
 
+#metodo para renombrar las columnas del dataframe a nombres canónicos esperados, basándose en el orden de las columnas
 def canonicalize_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
     """
     Renombra columnas según la posición observada en el profiling.
@@ -203,6 +209,7 @@ def canonicalize_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
     df = df.rename(columns=rename_map)
     return df
 
+#metodo para obtener o crear una fuente de dati
 def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> int:
     repo.execute("""
         SELECT id
@@ -224,6 +231,7 @@ def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> in
 
     return repo.fetch_one()[0]
 
+#metodo para obtener o crear una fecha, devolviendo su id
 def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int = 1) -> int:
     fecha_str = f"{anio:04d}-{mes:02d}-{dia:02d}"
 
@@ -253,6 +261,7 @@ def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int 
 
     return repo.fetch_one()[0]
 
+#metodo para construir un mapa de nombres normalizados de municipios a sus ids, usando tanto el nombre solo como el nombre combinado con el id del departamento, asegurando que exista el municipio "Ignorado"
 def build_municipio_name_map(repo: FirebirdRepository) -> dict:
     get_or_create_municipio_ignorado(repo)
 
@@ -268,6 +277,7 @@ def build_municipio_name_map(repo: FirebirdRepository) -> dict:
 
     return result
 
+#metodo para limpiar y validar la edad, devolviendo None si no es válida o si es considerada "ignorada"
 def clean_edad(value):
     edad = safe_int(value)
     if edad is None:
@@ -281,6 +291,7 @@ def clean_edad(value):
 
     return edad
 
+#metodo para obtener o crear sexo, retornando el id
 def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     nombre_norm = normalize_name(nombre)
 
@@ -310,6 +321,7 @@ def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
 
     return repo.fetch_one()[0]
 
+#metodo para obtener o crear un tipo de falta, devolviendo su id
 def get_or_create_tipo_falta(repo: FirebirdRepository, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -330,6 +342,7 @@ def get_or_create_tipo_falta(repo: FirebirdRepository, nombre: str) -> int:
 
     return repo.fetch_one()[0]
 
+#metodo para obtener o crear un grupo etario, devolviendo su id
 def get_or_create_grupo_etario(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -353,6 +366,7 @@ def get_or_create_grupo_etario(repo: FirebirdRepository, nombre: str):
 
     return repo.fetch_one()[0]
 
+#metodo para obtener o crear grupo etnico, retornando el id
 def get_or_create_grupo_etnico(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -374,6 +388,7 @@ def get_or_create_grupo_etnico(repo: FirebirdRepository, nombre: str):
 
     return repo.fetch_one()[0]
 
+#metodo para obtener o crear condicion de alfabetismo, devolviendo su id
 def get_or_create_condicion_alfabetismo(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -397,6 +412,7 @@ def get_or_create_condicion_alfabetismo(repo: FirebirdRepository, nombre: str):
 
     return repo.fetch_one()[0]
 
+#metodo para obtener o crear escolaridad, devolviendo su id
 def get_or_create_escolaridad(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -418,6 +434,7 @@ def get_or_create_escolaridad(repo: FirebirdRepository, nombre: str):
 
     return repo.fetch_one()[0]
 
+#metodo para obtener o crear areageografica, devolviendo su id
 def get_or_create_area_geografica(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -439,6 +456,7 @@ def get_or_create_area_geografica(repo: FirebirdRepository, nombre: str):
 
     return repo.fetch_one()[0]
 
+#metodo para obtener o crear estado ebriedad, devolviendo su id
 def get_or_create_estado_ebriedad(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -462,6 +480,7 @@ def get_or_create_estado_ebriedad(repo: FirebirdRepository, nombre: str):
 
     return repo.fetch_one()[0]
 
+#metodo para obtener o crear ocpuacion, devolviendo su id
 def get_or_create_ocupacion(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -494,6 +513,7 @@ def get_or_create_ocupacion(repo: FirebirdRepository, nombre: str):
 
     return repo.fetch_one()[0]
 
+#metodo para crear una persona, devolviendo su id
 def create_persona(repo: FirebirdRepository, id_sexo: int, edad: int | None) -> int:
     repo.execute("""
         INSERT INTO persona (id_sexo, edad)
@@ -502,6 +522,7 @@ def create_persona(repo: FirebirdRepository, id_sexo: int, edad: int | None) -> 
     """, (id_sexo, edad))
     return repo.fetch_one()[0]
 
+#metodo para insertar una falta judicial, recibiendo todos los ids necesarios y el id de la fuente de dato
 def insert_falta_judicial(
     repo: FirebirdRepository,
     id_fecha: int,
@@ -548,6 +569,7 @@ def insert_falta_judicial(
         id_fuente_dato
     ))
 
+# metodo para limpiar y normalizar valores de catalogos "ignorado"
 def clean_catalog_value(value: str, default: str = "Ignorado") -> str:
     text = normalize_text(value)
     norm = normalize_name(text)
@@ -557,10 +579,12 @@ def clean_catalog_value(value: str, default: str = "Ignorado") -> str:
 
     return text
 
+#metodo para convertir el nombre del mes en español a su numero correspondiente, devolviendo None si no se reconoce
 def parse_mes_to_int(mes_texto: str):
     mes_norm = normalize_name(mes_texto)
     return MESES_ES.get(mes_norm)
 
+#ejecutor etl
 def run_faltas_judiciales_etl(
     repo: FirebirdRepository,
     file_path: str,
@@ -570,7 +594,7 @@ def run_faltas_judiciales_etl(
         raise FileNotFoundError(f"No existe el archivo: {file_path}")
 
     print(f"Procesando archivo: {file_path}")
-
+    # Cargar el archivo Excel y normalizar columnas
     df = pd.read_excel(file_path, sheet_name="Sheet1", header=0)
     df = canonicalize_dataframe_columns(df)
 
@@ -583,7 +607,7 @@ def run_faltas_judiciales_etl(
     skipped_missing_sexo = 0
     skipped_invalid_year = 0
     skipped_missing_tipo_falta = 0
-
+    #recorriendo cada elemento en el df para insertar atenciones brindadas
     for _, row in df.iterrows():
         anio = safe_int(row.get("anio"))
         mes = parse_mes_to_int(row.get("mes"))
@@ -591,11 +615,9 @@ def run_faltas_judiciales_etl(
         if anio is None:
             skipped_invalid_year += 1
             continue
-
         if mes is None:
             skipped_missing_mes += 1
             continue
-
         try:
             fecha_id = get_or_create_fecha(repo, anio, mes, 1)
         except Exception:
@@ -604,7 +626,6 @@ def run_faltas_judiciales_etl(
 
         municipio_nombre = normalize_text(row.get("municipio_boleta"))
         municipio_norm = normalize_name(municipio_nombre)
-
         if municipio_norm in {"", "ignorado", "ignorada", "9999", "999", "sd", "s/d"}:
             skipped_missing_municipio += 1
             municipio_id = municipio_name_map.get("ignorado")
@@ -627,7 +648,6 @@ def run_faltas_judiciales_etl(
         if normalize_name(sexo_nombre) in {"", "sd", "s/d", "999", "9"}:
             skipped_missing_sexo += 1
             sexo_nombre = "Ignorado"
-
         id_sexo = get_or_create_sexo(repo, sexo_nombre)
 
         edad = clean_edad(row.get("edad"))

@@ -6,25 +6,38 @@ import pandas as pd
 
 from repositories.firebird_repository import FirebirdRepository
 
-
-MESES_ES = {
-    1: "Enero", 2: "Febrero", 3: "Marzo", 4: "Abril",
-    5: "Mayo", 6: "Junio", 7: "Julio", 8: "Agosto",
-    9: "Septiembre", 10: "Octubre", 11: "Noviembre", 12: "Diciembre",
+# diccionarios para normalizacion de meses y dias en español
+NOMBRES_MESES_ES = {
+    1: "Enero",
+    2: "Febrero",
+    3: "Marzo",
+    4: "Abril",
+    5: "Mayo",
+    6: "Junio",
+    7: "Julio",
+    8: "Agosto",
+    9: "Septiembre",
+    10: "Octubre",
+    11: "Noviembre",
+    12: "Diciembre",
 }
-
 DIAS_ES = {
-    0: "Lunes", 1: "Martes", 2: "Miércoles", 3: "Jueves",
-    4: "Viernes", 5: "Sábado", 6: "Domingo",
+    0: "Lunes",
+    1: "Martes",
+    2: "Miércoles",
+    3: "Jueves",
+    4: "Viernes",
+    5: "Sábado",
+    6: "Domingo",
 }
 
-
+#metodo para normalizar texto eliminando espacios
 def normalize_text(value) -> str:
     if value is None or pd.isna(value):
         return ""
     return str(value).strip()
 
-
+#metodo para normalizar texto eliminando acentos, caracteres especiales y convirtiendo a minusculas
 def normalize_name(text) -> str:
     if text is None or pd.isna(text):
         return ""
@@ -34,7 +47,7 @@ def normalize_name(text) -> str:
     text = " ".join(text.split())
     return text
 
-
+#metodo para convertir a entero de forma segura, devolviendo None si no se puede convertir o si el valor es considerado "ignorado"
 def safe_int(value):
     if value is None or pd.isna(value):
         return None
@@ -43,6 +56,7 @@ def safe_int(value):
     except Exception:
         return None
 
+# Obtener el ID del departamento a partir del ID del municipio
 def get_departamento_id_from_municipio(repo: FirebirdRepository, id_municipio: int) -> int | None:
     repo.execute("""
         SELECT id_departamento
@@ -52,6 +66,7 @@ def get_departamento_id_from_municipio(repo: FirebirdRepository, id_municipio: i
     row = repo.fetch_one()
     return row[0] if row else None
 
+# Insertar proceso judicial y retornar su id
 def insert_proceso_judicial(
     repo: FirebirdRepository,
     id_hecho_delictivo: int,
@@ -73,6 +88,7 @@ def insert_proceso_judicial(
     ))
     return repo.fetch_one()[0]
 
+# Insertar sentencia y retornar su id
 def insert_sentencia(
     repo: FirebirdRepository,
     id_proceso_judicial: int,
@@ -91,6 +107,7 @@ def insert_sentencia(
     ))
     return repo.fetch_one()[0]
 
+#metodo para obtener o crear tipo_fallo, retornando el id
 def get_or_create_tipo_fallo(repo: FirebirdRepository, codigo: str, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -108,6 +125,7 @@ def get_or_create_tipo_fallo(repo: FirebirdRepository, codigo: str, nombre: str)
     """, (codigo, nombre))
     return repo.fetch_one()[0]
 
+#metodoa para generar codigo unico basado en el texto
 def build_unique_code(text: str, prefix: str = "", max_len: int = 10) -> str:
     base = normalize_name(text).replace(" ", "_").upper()
     digest = hashlib.md5(base.encode("utf-8")).hexdigest()[:3].upper()
@@ -121,6 +139,7 @@ def build_unique_code(text: str, prefix: str = "", max_len: int = 10) -> str:
     trimmed = base[:cut_len]
     return f"{prefix}{trimmed}_{digest}"
 
+#metodo para cargar los diccionarios desde el archivo Excel, retornando un diccionario de diccionarios con las relaciones codigo-valor-etiqueta
 def load_dictionary_maps(dict_path: str) -> dict:
     df = pd.read_excel(dict_path, sheet_name="DICCIONARIO.2023VIF", header=3)
 
@@ -142,7 +161,7 @@ def load_dictionary_maps(dict_path: str) -> dict:
 
     return maps
 
-
+#metodo para obtener o crear una fecha, devolviendo su id
 def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int):
     fecha_str = f"{anio:04d}-{mes:02d}-{dia:02d}"
 
@@ -172,7 +191,7 @@ def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int)
 
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear una fuente de dati
 def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> int:
     repo.execute("""
         SELECT id
@@ -194,7 +213,7 @@ def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> in
 
     return repo.fetch_one()[0]
 
-
+#metodo para construir un mapa de nombres normalizados de departamentos a sus ids
 def build_departamento_map(repo: FirebirdRepository) -> dict:
     repo.execute("""
         SELECT id, codigo, nombre
@@ -224,7 +243,7 @@ def build_departamento_map(repo: FirebirdRepository) -> dict:
 
     return dep_map
 
-
+#metodo para construir un mapa de nombres normalizados de municipios a sus ids
 def build_municipio_name_map(repo: FirebirdRepository) -> dict:
     repo.execute("""
         SELECT id, nombre
@@ -238,7 +257,7 @@ def build_municipio_name_map(repo: FirebirdRepository) -> dict:
 
     return result
 
-
+#metodo para resolver el id del municipio a partir del código en el registro y los mapas de diccionario, devolviendo None si no se puede resolver
 def resolve_municipio_id_from_dict(row, maps, municipio_name_map):
     codigo = safe_int(row.get("HEC_DEPTOMCPIO"))
     if codigo is None:
@@ -260,7 +279,7 @@ def resolve_municipio_id_from_dict(row, maps, municipio_name_map):
 
     return municipio_name_map.get(normalize_name(municipio_nombre))
 
-
+#metodo para obtener o crear sexo, retornando el id
 def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     nombre = normalize_text(nombre).lower()
 
@@ -290,7 +309,7 @@ def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
 
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear tipo de agresion, retornando el id
 def get_or_create_tipo_agresion(repo: FirebirdRepository, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -308,7 +327,7 @@ def get_or_create_tipo_agresion(repo: FirebirdRepository, nombre: str) -> int:
     """, (nombre,))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear el delito, retornando el id
 def get_or_create_delito(repo: FirebirdRepository, codigo: str, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -327,7 +346,7 @@ def get_or_create_delito(repo: FirebirdRepository, codigo: str, nombre: str) -> 
 
     return repo.fetch_one()[0]
 
-
+#metodo para crear una persona, devolviendo su id
 def create_persona(repo: FirebirdRepository, id_sexo: int, edad: int | None) -> int:
     repo.execute("""
         INSERT INTO persona (id_sexo, edad)
@@ -336,7 +355,7 @@ def create_persona(repo: FirebirdRepository, id_sexo: int, edad: int | None) -> 
     """, (id_sexo, edad))
     return repo.fetch_one()[0]
 
-
+#metodo para crear un hecho_delictivo, devolviendo su id
 def create_hecho_delictivo(
     repo: FirebirdRepository,
     id_fecha: int,
@@ -364,7 +383,7 @@ def create_hecho_delictivo(
     ))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener datos del agresor a partir del registro, utilizando los mapas de diccionario para interpretar los codes, devolviendo sexo y edad
 def get_agresor_data(row, maps):
     sexo_code = safe_int(row.get("AGRE_SEXO"))
     edad = safe_int(row.get("AGRE_EDAD"))
@@ -375,7 +394,7 @@ def get_agresor_data(row, maps):
 
     return sexo_nombre, edad
 
-
+#metodo para insertar el registro de violencia intrafamiliar, relacionando la persona víctima, persona agresor, hecho delictivo y fuente de dato
 def insert_violencia_intrafamiliar(
     repo: FirebirdRepository,
     id_persona_victima: int,
@@ -404,7 +423,7 @@ def insert_violencia_intrafamiliar(
         id_fuente_dato
     ))
 
-
+#metodo para validar que la fila tiene una fecha válida, verificando que año, mes y día no sean nulos o valores de "ignorado"
 def is_valid_row(row) -> bool:
     anio = safe_int(row.get("HEC_ANO"))
     mes = safe_int(row.get("HEC_MES"))
@@ -419,7 +438,7 @@ def is_valid_row(row) -> bool:
 
     return True
 
-
+#ejecutor etl
 def run_violencia_intrafamiliar_etl(
     repo: FirebirdRepository,
     file_path: str,
@@ -434,10 +453,10 @@ def run_violencia_intrafamiliar_etl(
 
     print(f"Procesando archivo: {file_path}")
     print(f"Usando diccionario: {dict_path}")
-
+    # Cargar el archivo Excel y normalizar columnas
     maps = load_dictionary_maps(dict_path)
     df = pd.read_excel(file_path, sheet_name=0, header=0)
-
+    #obteniendo llaves foraneas necesarias para las inserciones
     fuente_id = get_or_create_fuente_dato(repo, dataset_name)
     dep_map = build_departamento_map(repo)
     municipio_name_map = build_municipio_name_map(repo)
@@ -449,7 +468,7 @@ def run_violencia_intrafamiliar_etl(
     skipped_missing_departamento = 0
     skipped_missing_municipio = 0
     skipped_missing_tipo_agresion = 0
-
+    #recorriendo cada elemento en el df para insertar registros
     for _, row in df.iterrows():
         if not is_valid_row(row):
             skipped_invalid_date += 1
@@ -480,7 +499,6 @@ def run_violencia_intrafamiliar_etl(
         if not sexo_nombre:
             skipped_missing_sexo += 1
             continue
-
         sexo_id = get_or_create_sexo(repo, sexo_nombre)
         edad = safe_int(row.get("VIC_EDAD"))
 
@@ -524,7 +542,6 @@ def run_violencia_intrafamiliar_etl(
         departamento_id = get_departamento_id_from_municipio(repo, municipio_id)
 
         if departamento_id:
-            # ejemplo académico: no todos los casos llegan a proceso
             if inserted % 3 == 0:
                 proceso_id = insert_proceso_judicial(
                     repo=repo,
@@ -533,7 +550,6 @@ def run_violencia_intrafamiliar_etl(
                     id_delito=delito_id
                 )
 
-                # alternar tipos de fallo para que haya variedad
                 if inserted % 5 == 0:
                     tipo_fallo_id = get_or_create_tipo_fallo(repo, "ABS", "ABSOLUTORIA")
                 else:
@@ -550,9 +566,9 @@ def run_violencia_intrafamiliar_etl(
     repo.commit()
 
     print(f"Insertados: {inserted}")
-    print(f"Omitidos por fecha inválida en origen: {skipped_invalid_date}")
-    print(f"Omitidos por fecha no encontrada en dimensión: {skipped_missing_fecha}")
+    print(f"Omitidos por fecha invalida en origen: {skipped_invalid_date}")
+    print(f"Omitidos por fecha no encontrada en dimension: {skipped_missing_fecha}")
     print(f"Omitidos por sexo no reconocido: {skipped_missing_sexo}")
     print(f"Omitidos por departamento no encontrado: {skipped_missing_departamento}")
     print(f"Omitidos por municipio no encontrado: {skipped_missing_municipio}")
-    print(f"Omitidos por tipo de agresión no encontrado en diccionario: {skipped_missing_tipo_agresion}")
+    print(f"Omitidos por tipo de agresion no encontrado en diccionario: {skipped_missing_tipo_agresion}")

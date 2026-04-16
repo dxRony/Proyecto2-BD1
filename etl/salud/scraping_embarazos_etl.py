@@ -12,19 +12,20 @@ from repositories.firebird_repository import FirebirdRepository
 
 
 BASE_URL = "https://osarguatemala.org/embarazo/datos/"
+# Headers para la solicitud HTTP al sitio
 HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
-
+# diccionarios para edades,
 EDADES = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
 
-
+#metodo para normalizar texto eliminando espacios
 def normalize_text(value) -> str:
     if value is None or pd.isna(value):
         return ""
     return str(value).strip()
 
-
+# metodo para truncar texto a una longitud máxima, eliminando espacios
 def normalize_name(text) -> str:
     if text is None or pd.isna(text):
         return ""
@@ -35,7 +36,7 @@ def normalize_name(text) -> str:
     text = " ".join(text.split())
     return text
 
-
+#metodo para convertir a entero de forma segura, devolviendo None si no se puede convertir o si el valor es considerado "nan"
 def safe_int(value):
     if value is None or pd.isna(value):
         return None
@@ -47,6 +48,7 @@ def safe_int(value):
     except Exception:
         return None
 
+#metodo para construir una sesión de requests con reintentos configurados
 def build_session() -> requests.Session:
     session = requests.Session()
 
@@ -76,10 +78,9 @@ def build_session() -> requests.Session:
         "Referer": "https://osarguatemala.org/",
         "Connection": "keep-alive",
     })
-
     return session
 
-
+#metodo para realizar una solicitud GET a una URL y devolver el contenido, con manejo de errores y reintentos
 def fetch_url(session: requests.Session, url: str) -> str:
     response = session.get(url, timeout=30, allow_redirects=True)
 
@@ -89,6 +90,7 @@ def fetch_url(session: requests.Session, url: str) -> str:
     response.raise_for_status()
     return response.text
 
+#metodo para obtener o crear un departamento "Ignorado" con codigo "9999"
 def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -106,7 +108,7 @@ def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
     """, ("9999", "Ignorado"))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear un municipio "Ignorado" con codigo "M99999" asociado al departamento "Ignorado"
 def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -126,7 +128,7 @@ def get_or_create_municipio_ignorado(repo: FirebirdRepository) -> int:
     """, ("M99999", "Ignorado", id_departamento))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear una fuente de dati
 def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> int:
     repo.execute("""
         SELECT id
@@ -146,7 +148,7 @@ def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> in
     """, ("OSAR Guatemala", dataset_name, "Web Scraping"))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear un tipo_indicador_salud
 def get_or_create_tipo_indicador_salud(repo: FirebirdRepository, nombre: str) -> int:
     repo.execute("""
         SELECT id
@@ -164,7 +166,7 @@ def get_or_create_tipo_indicador_salud(repo: FirebirdRepository, nombre: str) ->
     """, (nombre,))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear sexo, retornando el id
 def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     nombre_norm = normalize_name(nombre)
 
@@ -191,7 +193,7 @@ def get_or_create_sexo(repo: FirebirdRepository, nombre: str) -> int:
     """, (codigo, nombre_final))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear una fecha, devolviendo su id
 def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int) -> int:
     fecha_str = f"{anio:04d}-{mes:02d}-{dia:02d}"
 
@@ -211,8 +213,8 @@ def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int)
     """, (fecha_str, anio, mes, "Enero", dia, "Desconocido"))
     return repo.fetch_one()[0]
 
-
-def get_or_create_grupo_etario_edad_exacta(repo: FirebirdRepository, edad: int) -> int:
+#metodo para obtener o crear grupo etario, retornando el id
+def get_or_create_grupo_etario(repo: FirebirdRepository, edad: int) -> int:
     nombre = f"{edad} años"
     codigo = f"E{edad}"
 
@@ -232,7 +234,7 @@ def get_or_create_grupo_etario_edad_exacta(repo: FirebirdRepository, edad: int) 
     """, (codigo, nombre, edad, edad, "Edad exacta"))
     return repo.fetch_one()[0]
 
-
+#metodo para construir un mapa de nombres normalizados de departamentos a sus ids, asegurando que exista el departamento "Ignorado"
 def build_departamento_name_map(repo: FirebirdRepository) -> dict:
     get_or_create_departamento_ignorado(repo)
 
@@ -247,7 +249,7 @@ def build_departamento_name_map(repo: FirebirdRepository) -> dict:
         result[normalize_name(nombre)] = departamento_id
     return result
 
-
+#metodo para construir un mapa de nombres normalizados de municipios a sus ids, usando tanto el nombre solo como el nombre combinado con el id del departamento, asegurando que exista el municipio "Ignorado"
 def build_municipio_dep_map(repo: FirebirdRepository) -> dict:
     get_or_create_municipio_ignorado(repo)
 
@@ -264,7 +266,7 @@ def build_municipio_dep_map(repo: FirebirdRepository) -> dict:
         result[key] = municipio_id
     return result
 
-
+#metodo para obtener post links de la categoría de embarazos en el sitio de OSAR, filtrando por títulos que contengan palabras clave relacionadas con registros de nacimientos y año
 def get_post_links(max_pages: int = 5) -> list[str]:
     session = build_session()
     links = []
@@ -308,13 +310,14 @@ def get_post_links(max_pages: int = 5) -> list[str]:
 
     return links
 
+#metodo para extraer el año de un title usando expresiones regulares
 def extract_year_from_title(title: str):
     match = re.search(r"\b(20\d{2})\b", title)
     if match:
         return int(match.group(1))
     return None
 
-
+#metodo apra extraer el texto de un post dado su URL, devolviendo el título y el contenido normalizados, e imprimiendo el título detectado y los primeros 1000 caracteres del contenido para verificación
 def extract_post_text(url: str) -> tuple[str, str]:
     session = build_session()
     html = fetch_url(session, url)
@@ -342,7 +345,7 @@ def extract_post_text(url: str) -> tuple[str, str]:
 
     return title, content_text
 
-
+#metodo para validar si el post contiene una tabla con formato esperado, buscando palabras clave en el título y el contenido
 def is_tabular_post(title: str, content_text: str) -> bool:
     text_norm = normalize_name(content_text)
     title_norm = normalize_name(title)
@@ -358,6 +361,7 @@ def is_tabular_post(title: str, content_text: str) -> bool:
 
     return True
 
+#metodo para extraer los tokens de la tabla del contenido del post, buscando el bloque de texto que contiene el encabezado esperado
 def extract_table_tokens(content_text: str) -> list[str]:
     lines = [normalize_text(x) for x in content_text.splitlines()]
     lines = [x for x in lines if x]
@@ -387,14 +391,12 @@ def extract_table_tokens(content_text: str) -> list[str]:
 
     if start_idx is None:
         print("No se encontró encabezado exacto por líneas.")
-        print("Primeras 80 líneas detectadas:")
-        for line in lines[:80]:
-            print(line)
         raise ValueError("No se encontró encabezado de tabla")
 
     tokens = lines[start_idx:]
     return tokens
 
+#metodo para parsear los tokens de la tabla, construyendo una lista de diccionarios con los campos anio, departamento, municipio, edad y cantidad
 def parse_table_tokens(tokens: list[str], anio: int) -> list[dict]:
     departamentos_validos = get_departamentos_validos()
 
@@ -451,20 +453,8 @@ def parse_table_tokens(tokens: list[str], anio: int) -> list[dict]:
         if len(valores) == 10:
             valores.append(sum(valores))
 
-        if len(valores) != 11:
-            print(f"Fila incompleta detectada en {departamento_actual} / {municipio}")
+        if len(valores) != 11:            
             continue
-
-        total_reportado = valores[10]
-        total_calculado = sum(valores[:10])
-
-        if total_calculado != total_reportado:
-            print(
-                f"Advertencia total inconsistente en {departamento_actual} / {municipio}: "
-                f"{total_calculado} != {total_reportado}"
-            )
-
-        print(f"Fila detectada: {departamento_actual} / {municipio} -> {valores}")
         
         for idx, edad in enumerate(EDADES):
             records.append({
@@ -477,7 +467,7 @@ def parse_table_tokens(tokens: list[str], anio: int) -> list[dict]:
 
     return records
 
-
+#metodo para parsear las filas de la tabla, intentando separar el nombre del municipio de los valores numéricos, y devolviendo el nombre normalizado y la lista de valores enteros
 def parse_table_row(line: str):
     tokens = line.split()
 
@@ -512,7 +502,7 @@ def parse_table_row(line: str):
 
     return None, None
 
-
+#metodo para obtener el conjunto de nombres de departamentos válidos y normalizados
 def get_departamentos_validos() -> set:
     return {
         "alta verapaz",
@@ -539,7 +529,7 @@ def get_departamentos_validos() -> set:
         "zacapa",
     }
 
-
+#metodo para parsear posts y extraer los registros de embarazos
 def parse_post_to_records(url: str) -> list[dict]:
     title, content_text = extract_post_text(url)
 
@@ -559,6 +549,7 @@ def parse_post_to_records(url: str) -> list[dict]:
     print(f"Registros extraídos de {title}: {len(records)}")
     return records
 
+#metodo para construir el dataframe de embarazos, ejecutando el proceso completo de extracción, parseo y limpieza
 def build_embarazos_dataframe(max_pages: int = 5) -> pd.DataFrame:
     links = get_post_links(max_pages=max_pages)
 
@@ -586,7 +577,7 @@ def build_embarazos_dataframe(max_pages: int = 5) -> pd.DataFrame:
 
     return df
 
-
+#metodo para insertar un registro de salud de embarazos adolescentes, recibiendo los ids necesarios y la cantidad, e insertando en la tabla registro_salud
 def insert_registro_salud(
     repo: FirebirdRepository,
     id_tipo_indicador_salud: int,
@@ -622,7 +613,7 @@ def insert_registro_salud(
         id_fuente_dato
     ))
 
-
+#metodo para validar si ya existe un registro de salud con los mismos parámetros, para evitar duplicados
 def exists_registro_salud(
     repo: FirebirdRepository,
     id_tipo_indicador_salud: int,
@@ -652,29 +643,28 @@ def exists_registro_salud(
     row = repo.fetch_one()
     return row is not None
 
-
+#ejecutor etl
 def run_embarazos_etl(
     repo: FirebirdRepository,
     dataset_name: str = "Embarazos adolescentes OSAR"
 ):
     print("Iniciando ETL de embarazos OSAR")
-
+    # Construir el dataframe de sentencias a partir del proceso de extracción y limpieza (5 paginas max)
     df = build_embarazos_dataframe(max_pages=5)
 
     if df.empty:
         raise ValueError("No se encontraron datos tabulares de embarazos")
-
+    #obteniendo llaves foraneas necesarias para las inserciones
     fuente_id = get_or_create_fuente_dato(repo, dataset_name)
     tipo_indicador_id = get_or_create_tipo_indicador_salud(repo, "Embarazos adolescentes")
     sexo_id = get_or_create_sexo(repo, "Mujer")
-
     municipio_dep_map = build_municipio_dep_map(repo)
     municipio_ignorado_id = get_or_create_municipio_ignorado(repo)
 
     inserted = 0
     skipped_municipio = 0
     skipped_duplicado = 0
-
+    #recorriendo cada elemento en el df para insertar los registros
     for _, row in df.iterrows():
         anio = safe_int(row.get("anio"))
         edad = safe_int(row.get("edad"))
@@ -684,7 +674,7 @@ def run_embarazos_etl(
             continue
 
         fecha_id = get_or_create_fecha(repo, anio, 1, 1)
-        grupo_etario_id = get_or_create_grupo_etario_edad_exacta(repo, edad)
+        grupo_etario_id = get_or_create_grupo_etario(repo, edad)
 
         dep_norm = normalize_name(row.get("departamento"))
         mun_norm = normalize_name(row.get("municipio"))

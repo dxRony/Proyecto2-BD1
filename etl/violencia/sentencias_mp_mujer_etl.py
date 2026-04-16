@@ -7,7 +7,7 @@ import pandas as pd
 
 from repositories.firebird_repository import FirebirdRepository
 
-
+# diccionarios para normalizacion de meses y dias en español
 NOMBRES_MESES_ES = {
     1: "Enero",
     2: "Febrero",
@@ -22,7 +22,6 @@ NOMBRES_MESES_ES = {
     11: "Noviembre",
     12: "Diciembre",
 }
-
 DIAS_ES = {
     0: "Lunes",
     1: "Martes",
@@ -33,13 +32,13 @@ DIAS_ES = {
     6: "Domingo",
 }
 
-
+#metodo para normalizar texto eliminando espacios
 def normalize_text(value) -> str:
     if value is None or pd.isna(value):
         return ""
     return str(value).strip()
 
-
+#metodo para normalizar texto eliminando acentos, caracteres especiales y convirtiendo a minusculas
 def normalize_name(text) -> str:
     if text is None or pd.isna(text):
         return ""
@@ -49,7 +48,7 @@ def normalize_name(text) -> str:
     text = " ".join(text.split())
     return text
 
-
+#metodo para convertir a entero de forma segura, devolviendo None si no se puede convertir o si el valor es considerado "ignorado"
 def safe_int(value):
     if value is None or pd.isna(value):
         return None
@@ -61,7 +60,7 @@ def safe_int(value):
     except Exception:
         return None
 
-
+#metodoa para generar codigo unico basado en el texto
 def build_unique_code(text: str, prefix: str = "", max_len: int = 20) -> str:
     base = normalize_name(text).replace(" ", "_").upper()
     digest = hashlib.md5(base.encode("utf-8")).hexdigest()[:3].upper()
@@ -76,7 +75,7 @@ def build_unique_code(text: str, prefix: str = "", max_len: int = 20) -> str:
     trimmed = base[:cut_len]
     return f"{prefix}{trimmed}_{digest}"
 
-
+#metodo para renombrar las columnas del dataframe a nombres canónicos esperados, basándose en el orden de las columnas
 def canonicalize_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
     expected_columns = [
         "fecha",
@@ -98,7 +97,7 @@ def canonicalize_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
 
     return df.rename(columns=rename_map)
 
-
+# metodo para limpiar y normalizar valores de catalogos "ignorado"
 def clean_catalog_value(value: str, default: str = "Ignorado") -> str:
     text = normalize_text(value)
     norm = normalize_name(text)
@@ -121,7 +120,7 @@ def clean_catalog_value(value: str, default: str = "Ignorado") -> str:
 
     return text
 
-
+#metodo para obtener o crear una fuente de dati
 def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> int:
     repo.execute("""
         SELECT id
@@ -142,7 +141,7 @@ def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> in
     """, ("MP", dataset_name, "Excel"))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear una fecha, devolviendo su id
 def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int):
     fecha_str = f"{anio:04d}-{mes:02d}-{dia:02d}"
 
@@ -171,7 +170,7 @@ def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int)
     ))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear un tipo_fallo, devolviendo su id
 def get_or_create_tipo_fallo(repo: FirebirdRepository, nombre: str):
     nombre = clean_catalog_value(nombre, "Ignorado")
 
@@ -193,7 +192,7 @@ def get_or_create_tipo_fallo(repo: FirebirdRepository, nombre: str):
     """, (codigo, nombre))
     return repo.fetch_one()[0]
 
-
+#metodo para insertar un registro en la tabla sentencias_mp_estadistica
 def insert_sentencia_mp_estadistica(
     repo: FirebirdRepository,
     id_fecha: int,
@@ -213,7 +212,7 @@ def insert_sentencia_mp_estadistica(
         cantidad
     ))
 
-
+#metodo para construir un dataframe agregado por fecha e indicador, sumando las cantidades
 def build_aggregated_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
@@ -239,7 +238,7 @@ def build_aggregated_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
     return grouped
 
-
+#ejecutor etl
 def run_sentencias_mp_vcm_etl(
     repo: FirebirdRepository,
     file_path: str,
@@ -249,17 +248,17 @@ def run_sentencias_mp_vcm_etl(
         raise FileNotFoundError(f"No existe el archivo: {file_path}")
 
     print(f"Procesando archivo: {file_path}")
-
+    # Cargar el archivo Excel y normalizar columnas
     df = pd.read_excel(file_path, sheet_name="Sentencias 2008-2024", header=0)
     df = canonicalize_dataframe_columns(df)
     df = build_aggregated_dataframe(df)
-
+    #obteniendo llaves foraneas necesarias para las inserciones
     fuente_id = get_or_create_fuente_dato(repo, dataset_name)
 
     inserted = 0
     skipped_missing_fecha = 0
     skipped_missing_tipo_fallo = 0
-
+    #recorriendo cada elemento en el df para insertar atenciones brindadas
     for _, row in df.iterrows():
         anio = safe_int(row.get("anio_num"))
         mes = safe_int(row.get("mes_num"))

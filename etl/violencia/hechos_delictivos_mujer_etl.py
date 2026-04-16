@@ -7,7 +7,7 @@ import pandas as pd
 
 from repositories.firebird_repository import FirebirdRepository
 
-
+# diccionarios para normalizacion de meses y dias en español
 NOMBRES_MESES_ES = {
     1: "Enero",
     2: "Febrero",
@@ -22,7 +22,6 @@ NOMBRES_MESES_ES = {
     11: "Noviembre",
     12: "Diciembre",
 }
-
 DIAS_ES = {
     0: "Lunes",
     1: "Martes",
@@ -33,13 +32,13 @@ DIAS_ES = {
     6: "Domingo",
 }
 
-
+#metodo para normalizar texto eliminando espacios
 def normalize_text(value) -> str:
     if value is None or pd.isna(value):
         return ""
     return str(value).strip()
 
-
+#metodo para normalizar texto eliminando acentos, caracteres especiales y convirtiendo a minusculas
 def normalize_name(text) -> str:
     if text is None or pd.isna(text):
         return ""
@@ -49,7 +48,7 @@ def normalize_name(text) -> str:
     text = " ".join(text.split())
     return text
 
-
+#metodo para convertir a entero de forma segura, devolviendo None si no se puede convertir o si el valor es considerado "ignorado"
 def safe_int(value):
     if value is None or pd.isna(value):
         return None
@@ -61,7 +60,7 @@ def safe_int(value):
     except Exception:
         return None
 
-
+#metodoa para generar codigo unico basado en el texto
 def build_unique_code(text: str, prefix: str = "", max_len: int = 10) -> str:
     base = normalize_name(text).replace(" ", "_").upper()
     digest = hashlib.md5(base.encode("utf-8")).hexdigest()[:3].upper()
@@ -76,7 +75,7 @@ def build_unique_code(text: str, prefix: str = "", max_len: int = 10) -> str:
     trimmed = base[:cut_len]
     return f"{prefix}{trimmed}_{digest}"
 
-
+#metodo para renombrar las columnas del dataframe a nombres canónicos esperados, basándose en el orden de las columnas
 def canonicalize_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
     expected_columns = [
         "departamento",
@@ -97,7 +96,7 @@ def canonicalize_dataframe_columns(df: pd.DataFrame) -> pd.DataFrame:
 
     return df.rename(columns=rename_map)
 
-
+# metodo para limpiar y normalizar valores de catalogos "ignorado"
 def clean_catalog_value(value: str, default: str = "Ignorado") -> str:
     text = normalize_text(value)
     norm = normalize_name(text)
@@ -120,7 +119,7 @@ def clean_catalog_value(value: str, default: str = "Ignorado") -> str:
 
     return text
 
-
+#metodo para obtener o crear una fuente de dati
 def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> int:
     repo.execute("""
         SELECT id
@@ -141,7 +140,7 @@ def get_or_create_fuente_dato(repo: FirebirdRepository, dataset_name: str) -> in
     """, ("Ministerio de Gobernación", dataset_name, "Excel"))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear una fecha, devolviendo su id
 def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int):
     fecha_str = f"{anio:04d}-{mes:02d}-{dia:02d}"
 
@@ -170,7 +169,7 @@ def get_or_create_fecha(repo: FirebirdRepository, anio: int, mes: int, dia: int)
     ))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear un departamento "Ignorado" con codigo "9999"
 def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
     repo.execute("""
         SELECT id
@@ -188,7 +187,7 @@ def get_or_create_departamento_ignorado(repo: FirebirdRepository) -> int:
     """, ("9999", "Ignorado"))
     return repo.fetch_one()[0]
 
-
+#metodo para construir un mapa de nombres normalizados de departamentos a sus ids, asegurando que exista el departamento "Ignorado"
 def build_departamento_name_map(repo: FirebirdRepository) -> dict:
     get_or_create_departamento_ignorado(repo)
 
@@ -203,7 +202,7 @@ def build_departamento_name_map(repo: FirebirdRepository) -> dict:
         result[normalize_name(nombre)] = departamento_id
     return result
 
-
+#metodo para obtener o crear tipo_hecho_delictivo, retornando el id
 def get_or_create_tipo_hecho_delictivo(repo: FirebirdRepository, nombre: str) -> int:
     nombre = clean_catalog_value(nombre, "Ignorado")
 
@@ -223,7 +222,7 @@ def get_or_create_tipo_hecho_delictivo(repo: FirebirdRepository, nombre: str) ->
     """, (nombre,))
     return repo.fetch_one()[0]
 
-
+#metodo para obtener o crear categoria_delito, retornando el id
 def get_or_create_categoria_delito(repo: FirebirdRepository, nombre: str):
     if not nombre:
         return None
@@ -261,7 +260,7 @@ def get_or_create_categoria_delito(repo: FirebirdRepository, nombre: str):
 
     raise ValueError(f"No se pudo generar código único para categoría delito: {nombre}")
 
-
+#metodo para obtener o crear delito, retornando el id
 def get_or_create_delito(repo: FirebirdRepository, nombre: str, categoria_nombre: str | None):
     repo.execute("""
         SELECT id
@@ -297,7 +296,7 @@ def get_or_create_delito(repo: FirebirdRepository, nombre: str, categoria_nombre
 
     raise ValueError(f"No se pudo generar código único para delito: {nombre}")
 
-
+#metodo para insertar un registro en hecho_delictivo_mujer_estadistica
 def insert_hecho_delictivo_mujer_estadistica(
     repo: FirebirdRepository,
     id_departamento: int,
@@ -325,7 +324,7 @@ def insert_hecho_delictivo_mujer_estadistica(
         cantidad
     ))
 
-
+#metodo para construir un dataframe agregado por departamento, año, hecho delictivo y delito, sumando las cantidades
 def build_aggregated_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
@@ -349,7 +348,7 @@ def build_aggregated_dataframe(df: pd.DataFrame) -> pd.DataFrame:
 
     return grouped
 
-
+#jejecutor etl
 def run_hechos_delictivos_mujer_etl(
     repo: FirebirdRepository,
     file_path: str,
@@ -359,11 +358,11 @@ def run_hechos_delictivos_mujer_etl(
         raise FileNotFoundError(f"No existe el archivo: {file_path}")
 
     print(f"Procesando archivo: {file_path}")
-
+    # Cargar el archivo Excel y normalizar columnas
     df = pd.read_excel(file_path, sheet_name="Hchos delictivos 2008-2024", header=0)
     df = canonicalize_dataframe_columns(df)
     df = build_aggregated_dataframe(df)
-
+    #obteniendo llaves foraneas necesarias para las inserciones
     fuente_id = get_or_create_fuente_dato(repo, dataset_name)
     departamento_name_map = build_departamento_name_map(repo)
 
@@ -372,13 +371,12 @@ def run_hechos_delictivos_mujer_etl(
     skipped_missing_departamento = 0
     skipped_missing_hecho = 0
     skipped_missing_delito = 0
-
+    #recorriendo cada elemento en el df para insertar atenciones brindadas
     for _, row in df.iterrows():
         anio = safe_int(row.get("anio"))
         if anio is None:
             skipped_missing_fecha += 1
             continue
-
         try:
             fecha_id = get_or_create_fecha(repo, anio, 1, 1)
         except Exception:
@@ -387,11 +385,9 @@ def run_hechos_delictivos_mujer_etl(
 
         departamento_nombre = clean_catalog_value(row.get("departamento"), "Ignorado")
         departamento_id = departamento_name_map.get(normalize_name(departamento_nombre))
-
         if not departamento_id:
             skipped_missing_departamento += 1
             departamento_id = departamento_name_map.get("ignorado")
-
         if not departamento_id:
             departamento_id = get_or_create_departamento_ignorado(repo)
 
@@ -399,7 +395,6 @@ def run_hechos_delictivos_mujer_etl(
         if not hecho_delictivo_nombre:
             skipped_missing_hecho += 1
             continue
-
         try:
             tipo_hecho_id = get_or_create_tipo_hecho_delictivo(repo, hecho_delictivo_nombre)
         except Exception:
@@ -410,7 +405,6 @@ def run_hechos_delictivos_mujer_etl(
         if not delito_nombre:
             skipped_missing_delito += 1
             continue
-
         try:
             delito_id = get_or_create_delito(repo, delito_nombre, "Hechos delictivos contra mujeres")
         except Exception:
@@ -429,7 +423,6 @@ def run_hechos_delictivos_mujer_etl(
             id_delito=delito_id,
             cantidad=cantidad
         )
-
         inserted += 1
 
         if inserted % 1000 == 0:

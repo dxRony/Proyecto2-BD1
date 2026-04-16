@@ -5,23 +5,21 @@ from repositories.firebird_repository import FirebirdRepository
 from utils.csv_utils import read_csv_file
 from utils.normalizers import normalize_text, safe_int
 
+#metodos para normalizar columnas, sexo, grupo etario
 def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
     normalized_cols = []
 
     for col in df.columns:
-        col_norm = normalize_text(col)  # quita tildes y pasa a minúsculas
+        col_norm = normalize_text(col)  # quita tildes y pasa a minusculas
         col_norm = col_norm.replace(" ", "_").replace("-", "_")
         normalized_cols.append(col_norm)
-
     df.columns = normalized_cols
-
     rename_map = {
         "grupoetario": "grupo_etario",
         "grupo_etario": "grupo_etario",
         "cie_10": "cie10",
         "casos": "cantidad",
     }
-
     return df.rename(columns=rename_map)
 
 def normalize_grupo_etario(value: str) -> str:
@@ -41,6 +39,7 @@ def normalize_sexo(value: str) -> tuple[str, str]:
 
     return "ND", "No definido"
 
+#metodo para construir el dataframe limpio a partir del csv
 def build_dataframe(file_path: str) -> pd.DataFrame:
     df = read_csv_file(
         file_path=file_path,
@@ -48,9 +47,9 @@ def build_dataframe(file_path: str) -> pd.DataFrame:
         encoding="utf-8-sig",
         normalize_headers=False
     )
-
+    #normalizando columnas
     df = normalize_columns(df)
-
+    #campos requeridos
     required = [
         "anio",
         "departamento",
@@ -61,13 +60,11 @@ def build_dataframe(file_path: str) -> pd.DataFrame:
         "sexo",
         "cantidad",
     ]
-
     missing = [c for c in required if c not in df.columns]
     if missing:
         raise ValueError(f"Faltan columnas requeridas: {missing}. Columnas actuales: {list(df.columns)}")
 
     df = df[required].copy()
-
     df["anio"] = df["anio"].apply(safe_int)
     df["cantidad"] = df["cantidad"].apply(safe_int)
 
@@ -77,13 +74,14 @@ def build_dataframe(file_path: str) -> pd.DataFrame:
     df["diagnostico"] = df["diagnostico"].astype(str).str.strip()
     df["grupo_etario"] = df["grupo_etario"].apply(normalize_grupo_etario)
     df["sexo"] = df["sexo"].astype(str).str.strip()
-
     df = df.dropna(subset=["anio", "cantidad"])
     df = df[df["cantidad"] > 0]
 
     return df
 
+#metodo para obtener o crear diagnostico
 def get_or_create_diagnostico(repo: FirebirdRepository, codigo: str, nombre: str) -> int:
+    #primero se busca por codigo o nombre (ignorando mayusculas)
     repo.execute("""
         SELECT id
         FROM diagnostico_cie10
@@ -91,10 +89,10 @@ def get_or_create_diagnostico(repo: FirebirdRepository, codigo: str, nombre: str
            OR LOWER(nombre) = LOWER(?)
     """, (codigo, nombre))
     row = repo.fetch_one()
-
+    #si se encuentra, se retorna el id
     if row:
         return row[0]
-
+    #si no se encuentra, se inserta un nuevo registro y se retorna el nuevo id
     repo.execute("""
         INSERT INTO diagnostico_cie10 (codigo, nombre)
         VALUES (?, ?)
@@ -113,19 +111,19 @@ def run_cronicas_etl(
         raise FileNotFoundError(file_path)
 
     print(f"Procesando: {file_path}")
-
+    #construir dataframe limpio
     df = build_dataframe(file_path)
 
     print("Vista previa del DataFrame limpio:")
     print(df.head(10))
     print(f"Total filas: {len(df)}")
-
+    #obtener o crear fuente de dato y tipo de indicador
     fuente_id = repo.get_or_create_fuente_dato("MSPAS", dataset_name, "CSV")
     tipo_indicador_id = repo.get_or_create_tipo_indicador_salud("Enfermedades crónicas")
 
     inserted = 0
     skipped = 0
-
+    #obtener id de enfermedad fija para este dataset
     id_enfermedad_fija = repo.get_or_create_enfermedad(dataset_name, "Salud")
     
     for _, row in df.iterrows():
