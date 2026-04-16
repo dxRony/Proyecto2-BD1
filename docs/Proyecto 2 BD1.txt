@@ -270,8 +270,3 @@ C:.
         \---2024
                 base-de-datos-violencia-intrafamiliar-ano-2024_v3.xlsx (ya)
                 diccionario-de-variables-violencia-intrafamiliar.xlsx (ya)
-
-TODO:
-- ss de consultas
-- archivo count
-- archivo de inserts

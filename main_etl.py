@@ -1,5 +1,4 @@
 import argparse
-
 from config.db import get_connection, test_connection
 from repositories.firebird_repository import FirebirdRepository
 from etl.salud.desnutricion_etl import run_desnutricion_etl
@@ -379,9 +378,7 @@ def run_module(module_name: str, repo: FirebirdRepository):
 def main():
     parser = argparse.ArgumentParser(description="ETL Proyecto BD1")
     parser.add_argument("--test-connection", action="store_true")
-    #parser.add_argument("--catalogs", action="store_true")
     parser.add_argument("--module", type=str)
-    #parser.add_argument("--verbose", action="store_true")
 
     args = parser.parse_args()
 
