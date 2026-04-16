@@ -1,5 +1,5 @@
 --1. Cantidad de homicidios registrados por año y departamento.
-SELECT
+SELECT FIRST 10
     f.anio AS anio,
     dpto.nombre AS departamento,
     COUNT(*) AS cantidad_homicidios
@@ -22,10 +22,10 @@ ORDER BY
     dpto.nombre;
 
 --2. Número de denuncias por violencia contra la mujer por municipio.
-SELECT
+SELECT FIRST 10
     m.nombre AS municipio,
     dpto.nombre AS departamento,
-    SUM(dcvme.cantidad) AS total_casos
+    SUM(dcvme.cantidad) AS total_denuncias
 FROM delito_contra_vida_mujer_estadistica dcvme
 JOIN municipio m
     ON m.id = dcvme.id_municipio
@@ -35,14 +35,14 @@ GROUP BY
     m.nombre,
     dpto.nombre
 ORDER BY
-    total_casos DESC,
+    total_denuncias DESC,
     dpto.nombre,
     m.nombre;
 
 --3. Top 5 tipos de hechos delictivos más frecuentes en los últimos 5 años.
 SELECT FIRST 5
     d.nombre AS delito,
-    COUNT(*) AS total_casos
+    COUNT(*) AS total_hechos
 FROM hecho_delictivo hecho
 JOIN delito d
     ON d.id = hecho.id_delito
@@ -52,11 +52,11 @@ WHERE f.anio >= EXTRACT(YEAR FROM CURRENT_DATE) - 4
 GROUP BY
     d.nombre
 ORDER BY
-    total_casos DESC,
+    total_hechos DESC,
     d.nombre;
 
 --4. Sentencias dictadas por tipo de delito y año.
-SELECT
+SELECT FIRST 20
     f.anio AS anio,
     d.nombre AS delito,
     COUNT(s.id) AS total_sentencias
@@ -357,7 +357,7 @@ ORDER BY
     s.nombre;
 
 --21. Departamentos con mayor incidencia de enfermedades crónicas según diagnóstico CIE-10.
-SELECT
+SELECT FIRST 20
     d.nombre AS departamento,
     dc.codigo AS codigo_cie10,
     dc.nombre AS diagnostico_cie10,
