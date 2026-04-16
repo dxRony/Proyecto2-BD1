@@ -79,13 +79,31 @@ TABLES = [
     "registro_salud",
 ]
 
+from datetime import date, datetime, time
+from decimal import Decimal
+
 def sql_value(value):
     if value is None:
         return "NULL"
-    if isinstance(value, str):
-        return "'" + value.replace("'", "''") + "'"
+
     if isinstance(value, bool):
         return "TRUE" if value else "FALSE"
+
+    if isinstance(value, str):
+        return "'" + value.replace("'", "''") + "'"
+
+    if isinstance(value, datetime):
+        return "'" + value.strftime("%Y-%m-%d %H:%M:%S") + "'"
+
+    if isinstance(value, date):
+        return "'" + value.strftime("%Y-%m-%d") + "'"
+
+    if isinstance(value, time):
+        return "'" + value.strftime("%H:%M:%S") + "'"
+
+    if isinstance(value, Decimal):
+        return str(value)
+
     return str(value)
 
 def get_columns(cursor, table_name):
